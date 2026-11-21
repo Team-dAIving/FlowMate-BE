@@ -1,0 +1,35 @@
+spring:
+    application:
+        name: FlowMate-BE
+    datasource:
+        url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:flowmate}
+        username: ${POSTGRES_USER:postgres}
+        password: ${POSTGRES_PASSWORD}
+        driver-class-name: org.postgresql.Driver
+    jpa:
+        open-in-view: false
+        hibernate:
+            ddl-auto: ${JPA_DDL_AUTO:validate}
+        properties:
+            hibernate:
+                format_sql: true
+                jdbc:
+                    time_zone: UTC
+    security:
+        oauth2:
+            client:
+                registration:
+                    github:
+                        client-id: ${GITHUB_CLIENT_ID}
+                        client-secret: ${GITHUB_CLIENT_SECRET}
+                        scope:
+                            - read:user
+                            - user:email
+
+app:
+    auth:
+        jwt-secret: ${JWT_SECRET}
+        jwt-issuer: ${JWT_ISSUER:flowmate}
+        access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:PT1H}
+        frontend-origin: ${FRONTEND_ORIGIN:http://localhost:5173}
+        frontend-redirect-uri: ${FRONTEND_OAUTH_REDIRECT_URI:http://localhost:5173/oauth/callback}
