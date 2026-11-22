@@ -43,4 +43,19 @@ class FlowMateBeApplicationTests {
                 .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "null"));
     }
 
+    @Test
+    void 프록시의_HTTPS_헤더로_Github_OAuth_콜백을_생성한다() throws Exception {
+        mockMvc.perform(get("/oauth2/authorization/github")
+                        .header("X-Forwarded-Proto", "https")
+                        .header("X-Forwarded-Host", "flowmate.observer-v.cloud")
+                        .header("X-Forwarded-Port", "443"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string(
+                        HttpHeaders.LOCATION,
+                        org.hamcrest.Matchers.containsString(
+                                "redirect_uri=https://flowmate.observer-v.cloud/login/oauth2/code/github"
+                        )
+                ));
+    }
+
 }

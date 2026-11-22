@@ -26,6 +26,11 @@ spring:
                             - read:user
                             - user:email
 
+server:
+    # HTTPS is terminated by nginx in production. Honor its forwarded headers so
+    # Spring Security builds the GitHub OAuth callback with https://.
+    forward-headers-strategy: framework
+
 app:
     ai:
         base-url: ${AI_BASE_URL:http://127.0.0.1:8001}
