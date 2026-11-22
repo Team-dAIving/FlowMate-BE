@@ -12,7 +12,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -79,13 +81,31 @@ public class ProjectService {
         List<ProjectMemberSummaryResponse> members = projectMembers.stream()
                 .map(ProjectMemberSummaryResponse::from)
                 .toList();
+        List<String> techStack = aggregateTechStack(projectMembers);
         return ProjectListItemResponse.of(
                 project,
+                techStack,
                 members,
                 leaderName,
                 taskCounts.total(),
                 taskCounts.completed()
         );
+    }
+
+    private List<String> aggregateTechStack(List<ProjectMember> projectMembers) {
+        Map<String, String> technologies = new LinkedHashMap<>();
+        projectMembers.stream()
+                .map(ProjectMember::getTechStack)
+                .filter(Objects::nonNull)
+                .flatMap(List::stream)
+                .filter(Objects::nonNull)
+                .map(String::strip)
+                .filter(technology -> !technology.isEmpty())
+                .forEach(technology -> technologies.putIfAbsent(
+                        technology.toLowerCase(Locale.ROOT),
+                        technology
+                ));
+        return List.copyOf(technologies.values());
     }
 
     private boolean isLeader(ProjectMember projectMember) {

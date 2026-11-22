@@ -27,6 +27,8 @@ spring:
                             - user:email
 
 app:
+    ai:
+        base-url: ${AI_BASE_URL:http://127.0.0.1:8001}
     auth:
         jwt-secret: ${JWT_SECRET}
         jwt-issuer: ${JWT_ISSUER:flowmate}

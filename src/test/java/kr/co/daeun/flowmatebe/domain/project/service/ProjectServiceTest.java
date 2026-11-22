@@ -33,8 +33,22 @@ class ProjectServiceTest {
     void 로그인_사용자가_참여한_프로젝트와_리더_및_진행률을_반환한다() {
         Team team = team(10L, "플로우메이트 팀");
         Project project = project(20L, team, "WEB");
-        ProjectMember leader = member(30L, project, user(1L, "팀장"), "Leader");
-        ProjectMember developer = member(31L, project, user(2L, "개발자"), "Member");
+        ProjectMember leader = member(
+                30L,
+                project,
+                user(1L, "팀장"),
+                "Leader",
+                List.of("backend"),
+                List.of("Spring Boot", "Java")
+        );
+        ProjectMember developer = member(
+                31L,
+                project,
+                user(2L, "개발자"),
+                "Member",
+                List.of("frontend"),
+                List.of("React", "Vite", "java")
+        );
         TaskRepository.ProjectTaskCount taskCount = mock(TaskRepository.ProjectTaskCount.class);
 
         when(projectRepository.findAllByMemberUserIdOrderByCreatedAtDesc(2L))
@@ -58,8 +72,15 @@ class ProjectServiceTest {
         assertThat(item.totalTaskCount()).isEqualTo(9);
         assertThat(item.completedTaskCount()).isEqualTo(2);
         assertThat(item.progressPercent()).isEqualTo(22);
+        assertThat(item.techStack())
+                .containsExactly("Spring Boot", "Java", "React", "Vite");
         assertThat(item.members()).extracting(member -> member.userId())
                 .containsExactly(1L, 2L);
+        assertThat(item.members().get(0).parts()).containsExactly("backend");
+        assertThat(item.members().get(0).techStack())
+                .containsExactly("Spring Boot", "Java");
+        assertThat(item.members().get(0).avatarUrl())
+                .isEqualTo("https://example.com/avatar/1");
         verify(projectRepository).findAllByMemberUserIdOrderByCreatedAtDesc(2L);
     }
 
@@ -123,13 +144,17 @@ class ProjectServiceTest {
             Long id,
             Project project,
             User user,
-            String role
+            String role,
+            List<String> parts,
+            List<String> techStack
     ) {
         ProjectMember member = new ProjectMember();
         member.setId(id);
         member.setProject(project);
         member.setUser(user);
         member.setRole(role);
+        member.setParts(parts);
+        member.setTechStack(techStack);
         return member;
     }
 }
