@@ -54,7 +54,7 @@ public class GithubWebhookService {
         delivery.setAction(stringValue(payload.get("action")));
         delivery.setGithubRepositoryId(repositoryId(payload));
         delivery.setPayload(payload);
-        delivery.setProcessingStatus("RECEIVED");
+        delivery.setProcessingStatus("PENDING");
         deliveryRepository.save(delivery);
     }
 
