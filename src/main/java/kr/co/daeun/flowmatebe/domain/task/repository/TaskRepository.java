@@ -54,10 +54,33 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("userId") Long userId
     );
 
+    @Query("""
+            select t.project.id as projectId,
+                   count(t.id) as totalCount,
+                   sum(case when upper(t.status) = upper(:completedStatus) then 1 else 0 end)
+                       as completedCount
+            from Task t
+            where t.project.id in :projectIds
+            group by t.project.id
+            """)
+    List<ProjectTaskCount> countTasksByProjectIds(
+            @Param("projectIds") Collection<Long> projectIds,
+            @Param("completedStatus") String completedStatus
+    );
+
     interface TeamTaskCount {
 
         Long getTeamId();
 
         long getTaskCount();
+    }
+
+    interface ProjectTaskCount {
+
+        Long getProjectId();
+
+        long getTotalCount();
+
+        long getCompletedCount();
     }
 }
