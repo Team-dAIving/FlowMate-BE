@@ -75,9 +75,10 @@ class FlowMateBeApplicationTests {
     }
 
     @Test
-    @Test
     void 프록시의_HTTPS_헤더로_Github_OAuth_콜백을_생성한다() throws Exception {
         mockMvc.perform(get("/oauth2/authorization/github")
+                        .queryParam("client", "web")
+                        .queryParam("state", "frontend-random-state")
                         .header("X-Forwarded-Proto", "https")
                         .header("X-Forwarded-Host", "flowmate.observer-v.cloud")
                         .header("X-Forwarded-Port", "443"))
