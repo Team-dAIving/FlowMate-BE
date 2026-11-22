@@ -67,6 +67,9 @@ class ProjectIssueDraftServiceTest {
                 .extracting(AiIssueGenerateRequest.Member::role)
                 .containsExactly("BACKEND", "FRONTEND");
         assertThat(aiRequest.planText())
+                .contains("프로젝트 설계 내용:")
+                .contains("사용자 인증과 업무 관리를 중심으로 설계합니다.")
+                .doesNotContain("MVP 출시")
                 .contains("프로젝트 리더: 이다은")
                 .contains("projectRole=Leader")
                 .doesNotContain("github.com/team/backend");
@@ -105,6 +108,7 @@ class ProjectIssueDraftServiceTest {
                 "FlowMate",
                 "AI 협업 서비스",
                 "MVP 출시",
+                "사용자 인증과 업무 관리를 중심으로 설계합니다.",
                 "WEB",
                 LocalDate.of(2026, 11, 22),
                 LocalDate.of(2026, 12, 31),
@@ -124,6 +128,7 @@ class ProjectIssueDraftServiceTest {
                 "FlowMate",
                 "AI 협업 서비스",
                 "MVP 출시",
+                "사용자 인증과 업무 관리를 중심으로 설계합니다.",
                 "WEB",
                 LocalDate.of(2026, 11, 22),
                 LocalDate.of(2026, 12, 31),

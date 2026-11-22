@@ -172,7 +172,8 @@ public class ProjectIssueDraftService {
             Map<Long, User> usersById
     ) {
         List<String> lines = new ArrayList<>();
-        lines.add("프로젝트 최종 목표: " + request.goal().strip());
+        lines.add("프로젝트 설계 내용:");
+        lines.add(request.designText().strip());
         lines.add("프로젝트 유형: " + request.type().strip());
         lines.add("프로젝트 리더: " + displayName(usersById.get(request.leaderUserId())));
         lines.add("프로젝트 멤버별 정보:");

@@ -18,7 +18,8 @@ class GenerateIssueDraftsRequestValidationTest {
         GenerateIssueDraftsRequest request = new GenerateIssueDraftsRequest(
                 "FlowMate",
                 "설명",
-                "목표",
+                "최종 목표",
+                "프로젝트 상세 설계 내용",
                 "WEB",
                 LocalDate.of(2026, 11, 22),
                 LocalDate.of(2026, 12, 31),
@@ -35,5 +36,31 @@ class GenerateIssueDraftsRequestValidationTest {
         assertThat(validator.validate(request))
                 .extracting(violation -> violation.getPropertyPath().toString())
                 .contains("members[0].part");
+    }
+
+    @Test
+    void PM과_디자인_파트를_허용한다() {
+        assertThat(validator.validate(requestWithPart("pm"))).isEmpty();
+        assertThat(validator.validate(requestWithPart("design"))).isEmpty();
+    }
+
+    private GenerateIssueDraftsRequest requestWithPart(String part) {
+        return new GenerateIssueDraftsRequest(
+                "FlowMate",
+                "설명",
+                "최종 목표",
+                "프로젝트 상세 설계 내용",
+                "WEB",
+                LocalDate.of(2026, 11, 22),
+                LocalDate.of(2026, 12, 31),
+                null,
+                1L,
+                List.of(new GenerateIssueDraftsRequest.Member(
+                        1L,
+                        part,
+                        "Figma, Jira",
+                        null
+                ))
+        );
     }
 }
