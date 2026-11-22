@@ -58,6 +58,9 @@ public class Project {
     @Column(columnDefinition = "text")
     private String status;
 
+    @Column(columnDefinition = "text")
+    private String type;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;

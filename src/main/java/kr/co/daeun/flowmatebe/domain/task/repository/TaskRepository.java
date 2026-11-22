@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
@@ -22,10 +23,64 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("status") String status
     );
 
+    @Query("""
+            select distinct t
+            from Task t
+            join fetch t.project
+            left join fetch t.assigneeMember am
+            left join fetch am.user
+            where t.project.team.id = :teamId
+            order by t.id
+            """)
+    List<Task> findAllWithDetailsByTeamId(@Param("teamId") Long teamId);
+
+    @Query("""
+            select t
+            from Task t
+            join fetch t.project p
+            left join fetch t.assigneeMember am
+            left join fetch am.user
+            left join fetch t.githubRepository
+            where t.id = :taskId
+              and exists (
+                  select tm.id
+                  from TeamMember tm
+                  where tm.team = p.team
+                    and tm.user.id = :userId
+              )
+            """)
+    Optional<Task> findAccessibleDetailByIdAndUserId(
+            @Param("taskId") Long taskId,
+            @Param("userId") Long userId
+    );
+
+    @Query("""
+            select t.project.id as projectId,
+                   count(t.id) as totalCount,
+                   sum(case when upper(t.status) = upper(:completedStatus) then 1 else 0 end)
+                       as completedCount
+            from Task t
+            where t.project.id in :projectIds
+            group by t.project.id
+            """)
+    List<ProjectTaskCount> countTasksByProjectIds(
+            @Param("projectIds") Collection<Long> projectIds,
+            @Param("completedStatus") String completedStatus
+    );
+
     interface TeamTaskCount {
 
         Long getTeamId();
 
         long getTaskCount();
+    }
+
+    interface ProjectTaskCount {
+
+        Long getProjectId();
+
+        long getTotalCount();
+
+        long getCompletedCount();
     }
 }

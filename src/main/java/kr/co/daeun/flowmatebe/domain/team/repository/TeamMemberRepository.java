@@ -18,4 +18,14 @@ public interface TeamMemberRepository extends JpaRepository<TeamMember, Long> {
             order by tm.id
             """)
     List<TeamMember> findAllWithUserByTeamIds(@Param("teamIds") Collection<Long> teamIds);
+
+    @Query("""
+            select tm
+            from TeamMember tm
+            join fetch tm.user
+            where tm.team.id = :teamId
+            order by tm.id
+            """)
+    List<TeamMember> findAllWithUserByTeamId(@Param("teamId") Long teamId);
+
 }
