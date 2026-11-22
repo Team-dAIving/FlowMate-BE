@@ -9,4 +9,6 @@ import java.util.List;
 public interface ProjectRepository extends JpaRepository<Project, Long> {
 
     List<Project> findAllByTeam_IdInOrderByCreatedAtAsc(Collection<Long> teamIds);
+
+    List<Project> findAllByTeam_IdOrderByCreatedAtAsc(Long teamId);
 }

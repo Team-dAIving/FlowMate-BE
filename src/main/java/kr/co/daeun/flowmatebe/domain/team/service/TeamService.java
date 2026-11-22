@@ -1,13 +1,19 @@
 package kr.co.daeun.flowmatebe.domain.team.service;
 
 import kr.co.daeun.flowmatebe.domain.project.repository.ProjectRepository;
+import kr.co.daeun.flowmatebe.domain.project.entity.Project;
+import kr.co.daeun.flowmatebe.domain.task.entity.Task;
 import kr.co.daeun.flowmatebe.domain.task.repository.TaskRepository;
 import kr.co.daeun.flowmatebe.domain.team.dto.request.CreateTeamRequest;
 import kr.co.daeun.flowmatebe.domain.team.dto.response.CreateTeamResponse;
+import kr.co.daeun.flowmatebe.domain.team.dto.response.TeamDetailMemberResponse;
+import kr.co.daeun.flowmatebe.domain.team.dto.response.TeamDetailProjectResponse;
+import kr.co.daeun.flowmatebe.domain.team.dto.response.TeamDetailResponse;
 import kr.co.daeun.flowmatebe.domain.team.dto.response.TeamListResponse;
 import kr.co.daeun.flowmatebe.domain.team.dto.response.TeamMemberResponse;
 import kr.co.daeun.flowmatebe.domain.team.dto.response.TeamProjectResponse;
 import kr.co.daeun.flowmatebe.domain.team.dto.response.TeamResponse;
+import kr.co.daeun.flowmatebe.domain.team.dto.response.TeamTaskResponse;
 import kr.co.daeun.flowmatebe.domain.team.entity.Team;
 import kr.co.daeun.flowmatebe.domain.team.entity.TeamMember;
 import kr.co.daeun.flowmatebe.domain.team.repository.TeamMemberRepository;
@@ -35,6 +41,7 @@ import java.util.stream.Collectors;
 public class TeamService {
 
     private static final String IN_PROGRESS_STATUS = "IN_PROGRESS";
+    private static final String DONE_STATUS = "DONE";
 
     private final TeamRepository teamRepository;
     private final TeamMemberRepository teamMemberRepository;
@@ -66,6 +73,70 @@ public class TeamService {
                 .toList();
 
         return new TeamListResponse(responses);
+    }
+
+    public TeamDetailResponse getTeamDetail(Long currentUserId, Long teamId) {
+        Team team = teamRepository.findByIdAndMemberUserId(teamId, currentUserId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "팀을 찾을 수 없습니다."
+                ));
+
+        List<Project> projects = projectRepository.findAllByTeam_IdOrderByCreatedAtAsc(teamId);
+        List<TeamMember> teamMembers = teamMemberRepository.findAllWithUserByTeamId(teamId);
+        List<Task> tasks = taskRepository.findAllWithDetailsByTeamId(teamId);
+
+        Map<Long, TaskCounts> taskCountsByProjectId = tasks.stream()
+                .collect(Collectors.groupingBy(
+                        task -> task.getProject().getId(),
+                        Collectors.collectingAndThen(Collectors.toList(), this::countTasks)
+                ));
+        Map<Long, TaskCounts> taskCountsByAssigneeUserId = tasks.stream()
+                .filter(task -> task.getAssigneeMember() != null)
+                .collect(Collectors.groupingBy(
+                        task -> task.getAssigneeMember().getUser().getId(),
+                        Collectors.collectingAndThen(Collectors.toList(), this::countTasks)
+                ));
+
+        List<TeamDetailProjectResponse> projectResponses = projects.stream()
+                .map(project -> {
+                    TaskCounts counts = taskCountsByProjectId.getOrDefault(
+                            project.getId(),
+                            TaskCounts.EMPTY
+                    );
+                    return TeamDetailProjectResponse.of(
+                            project,
+                            counts.total(),
+                            counts.completed()
+                    );
+                })
+                .toList();
+        List<TeamDetailMemberResponse> memberResponses = teamMembers.stream()
+                .map(teamMember -> {
+                    TaskCounts counts = taskCountsByAssigneeUserId.getOrDefault(
+                            teamMember.getUser().getId(),
+                            TaskCounts.EMPTY
+                    );
+                    return TeamDetailMemberResponse.of(
+                            teamMember,
+                            counts.total(),
+                            counts.inProgress()
+                    );
+                })
+                .toList();
+        List<TeamTaskResponse> taskResponses = tasks.stream()
+                .map(TeamTaskResponse::from)
+                .toList();
+        TaskCounts teamTaskCounts = countTasks(tasks);
+
+        return TeamDetailResponse.of(
+                team,
+                projectResponses,
+                memberResponses,
+                taskResponses,
+                teamTaskCounts.total() - teamTaskCounts.completed(),
+                teamTaskCounts.completed()
+        );
     }
 
     @Transactional
@@ -154,5 +225,24 @@ public class TeamService {
                         TaskRepository.TeamTaskCount::getTeamId,
                         TaskRepository.TeamTaskCount::getTaskCount
                 ));
+    }
+
+    private TaskCounts countTasks(List<Task> tasks) {
+        long completed = tasks.stream()
+                .filter(task -> statusEquals(task, DONE_STATUS))
+                .count();
+        long inProgress = tasks.stream()
+                .filter(task -> statusEquals(task, IN_PROGRESS_STATUS))
+                .count();
+        return new TaskCounts(tasks.size(), completed, inProgress);
+    }
+
+    private boolean statusEquals(Task task, String expectedStatus) {
+        return task.getStatus() != null && task.getStatus().equalsIgnoreCase(expectedStatus);
+    }
+
+    private record TaskCounts(long total, long completed, long inProgress) {
+
+        private static final TaskCounts EMPTY = new TaskCounts(0, 0, 0);
     }
 }
