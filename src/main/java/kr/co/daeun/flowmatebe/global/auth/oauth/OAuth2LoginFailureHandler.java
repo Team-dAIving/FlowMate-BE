@@ -17,6 +17,7 @@ import java.io.IOException;
 public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
 
     private final AuthProperties authProperties;
+    private final OAuthClientContext clientContext;
 
     @Override
     public void onAuthenticationFailure(
@@ -24,15 +25,24 @@ public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
             HttpServletResponse response,
             AuthenticationException exception
     ) throws IOException {
+        OAuthClientContext.Value context = clientContext.load(request)
+                .orElse(new OAuthClientContext.Value(OAuthClient.WEB, ""));
+
         HttpSession session = request.getSession(false);
         if (session != null) {
             session.invalidate();
         }
 
-        String redirectUri = UriComponentsBuilder.fromUriString(authProperties.frontendRedirectUri())
+        UriComponentsBuilder redirectUriBuilder = UriComponentsBuilder
+                .fromUriString(context.client().redirectUri(authProperties))
                 .queryParam("error", "oauth_login_failed")
-                .build()
-                .toUriString();
+                .queryParamIfPresent(
+                        "state",
+                        context.state().isEmpty()
+                                ? java.util.Optional.empty()
+                                : java.util.Optional.of(context.state())
+                );
+        String redirectUri = redirectUriBuilder.build().encode().toUriString();
         response.sendRedirect(redirectUri);
     }
 }

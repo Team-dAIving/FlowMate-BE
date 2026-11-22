@@ -5,7 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import kr.co.daeun.flowmatebe.global.auth.config.AuthProperties;
-import kr.co.daeun.flowmatebe.global.auth.jwt.JwtTokenService;
+import kr.co.daeun.flowmatebe.global.auth.service.OAuthCodeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -19,7 +19,8 @@ import java.net.URI;
 @RequiredArgsConstructor
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
-    private final JwtTokenService jwtTokenService;
+    private final OAuthCodeService oauthCodeService;
+    private final OAuthClientContext clientContext;
     private final AuthProperties authProperties;
 
     @Override
@@ -29,17 +30,24 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             Authentication authentication
     ) throws IOException, ServletException {
         FlowMateOAuth2User principal = (FlowMateOAuth2User) authentication.getPrincipal();
-        String accessToken = jwtTokenService.createAccessToken(principal.localUserId());
+        OAuthClientContext.Value context = clientContext.load(request)
+                .orElseThrow(() -> new IllegalStateException("OAuth client context가 없습니다."));
+        String code = oauthCodeService.create(
+                principal.localUserId(),
+                principal.onboardingRequired(),
+                context.client()
+        );
 
         HttpSession session = request.getSession(false);
         if (session != null) {
             session.invalidate();
         }
 
-        URI redirectUri = UriComponentsBuilder.fromUriString(authProperties.frontendRedirectUri())
-                .queryParam("accessToken", accessToken)
-                .queryParam("onboardingRequired", principal.onboardingRequired())
+        URI redirectUri = UriComponentsBuilder.fromUriString(context.client().redirectUri(authProperties))
+                .queryParam("code", code)
+                .queryParam("state", context.state())
                 .build()
+                .encode()
                 .toUri();
         response.sendRedirect(redirectUri.toString());
     }

@@ -38,7 +38,9 @@ class JwtTokenServiceTest {
                 "flowmate",
                 Duration.ofHours(1),
                 "http://localhost:5173",
-                "http://localhost:5173/oauth/callback"
+                "http://localhost:5173/oauth/callback",
+                "flowmate://oauth/callback",
+                Duration.ofMinutes(2)
         );
         JwtTokenService service = new JwtTokenService(encoder, properties);
 

@@ -11,7 +11,9 @@ public record AuthProperties(
         String jwtIssuer,
         Duration accessTokenTtl,
         String frontendOrigin,
-        String frontendRedirectUri
+        String frontendRedirectUri,
+        String desktopRedirectUri,
+        Duration oauthCodeTtl
 ) {
 
     public AuthProperties {

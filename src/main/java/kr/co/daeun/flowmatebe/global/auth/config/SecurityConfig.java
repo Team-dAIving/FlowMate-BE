@@ -3,6 +3,8 @@ package kr.co.daeun.flowmatebe.global.auth.config;
 import kr.co.daeun.flowmatebe.global.auth.oauth.FlowMateOAuth2UserService;
 import kr.co.daeun.flowmatebe.global.auth.oauth.OAuth2LoginFailureHandler;
 import kr.co.daeun.flowmatebe.global.auth.oauth.OAuth2LoginSuccessHandler;
+import kr.co.daeun.flowmatebe.global.auth.oauth.OAuthClientContext;
+import kr.co.daeun.flowmatebe.global.auth.oauth.OAuthClientContextFilter;
 import kr.co.daeun.flowmatebe.global.error.ApiErrorResponseWriter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -14,6 +16,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.savedrequest.NullRequestCache;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -32,6 +35,7 @@ public class SecurityConfig {
     private final OAuth2LoginFailureHandler loginFailureHandler;
     private final JwtDecoder jwtDecoder;
     private final ApiErrorResponseWriter errorResponseWriter;
+    private final OAuthClientContext oauthClientContext;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -44,7 +48,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/oauth2/**", "/login/oauth2/**", "/error").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/logout").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/logout", "/api/auth/token").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, exception) ->
@@ -67,6 +71,11 @@ public class SecurityConfig {
                         .jwt(jwt -> jwt.decoder(jwtDecoder)))
                 .logout(logout -> logout.disable());
 
+        http.addFilterBefore(
+                new OAuthClientContextFilter(oauthClientContext, errorResponseWriter),
+                OAuth2AuthorizationRequestRedirectFilter.class
+        );
+
         return http.build();
     }
 
@@ -75,6 +84,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         LinkedHashSet<String> allowedOrigins = new LinkedHashSet<>();
         allowedOrigins.add(authProperties.frontendOrigin());
+        allowedOrigins.add("https://flow-mate-fe.vercel.app");
         allowedOrigins.add("http://localhost:5173");
         // file:// 페이지의 Origin 헤더는 웹 표준에 따라 대부분 "null"로 전송된다.
         allowedOrigins.add("null");
