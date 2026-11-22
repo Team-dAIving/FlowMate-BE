@@ -60,7 +60,7 @@ class GithubWebhookServiceTest {
         assertThat(saved.getEventName()).isEqualTo("pull_request");
         assertThat(saved.getAction()).isEqualTo("review_requested");
         assertThat(saved.getGithubRepositoryId()).isEqualTo(12345L);
-        assertThat(saved.getProcessingStatus()).isEqualTo("RECEIVED");
+        assertThat(saved.getProcessingStatus()).isEqualTo("PENDING");
     }
 
     @Test
