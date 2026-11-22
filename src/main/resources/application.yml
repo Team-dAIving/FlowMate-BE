@@ -32,6 +32,12 @@ server:
 app:
     ai:
         base-url: ${AI_BASE_URL:http://127.0.0.1:8001}
+    github:
+        slug: ${GITHUB_APP_SLUG:}
+        app-id: ${GITHUB_APP_ID:}
+        private-key-base64: ${GITHUB_APP_PRIVATE_KEY_BASE64:}
+        webhook-secret: ${GITHUB_WEBHOOK_SECRET:}
+        installation-state-ttl: ${GITHUB_INSTALLATION_STATE_TTL:PT10M}
     auth:
         jwt-secret: ${JWT_SECRET}
         jwt-issuer: ${JWT_ISSUER:flowmate}

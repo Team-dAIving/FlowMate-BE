@@ -43,6 +43,9 @@ public class ProjectRepository {
     @Column(name = "repository_name", columnDefinition = "text")
     private String repositoryName;
 
+    @Column(name = "repository_role", nullable = false, columnDefinition = "text")
+    private String repositoryRole;
+
     @Column(name = "html_url", columnDefinition = "text")
     private String htmlUrl;
 
