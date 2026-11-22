@@ -93,7 +93,7 @@ class ProjectCreationServiceTest {
             assertThat(repository.githubRepositoryId()).isEqualTo(1001L);
             assertThat(repository.owner()).isEqualTo("Team-dAIving");
             assertThat(repository.name()).isEqualTo("FlowMate-BE");
-            assertThat(repository.role()).isEqualTo("backend");
+            assertThat(repository.role()).isEqualTo("BACKEND");
         });
         verify(githubClient).getRepositorySnapshot(500L, 1001L);
         verify(projectMemberRepository).saveAll(any());

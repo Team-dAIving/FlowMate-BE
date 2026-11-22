@@ -5,7 +5,6 @@ import kr.co.daeun.flowmatebe.domain.project.entity.ProjectRepository;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 public record CreateProjectResponse(
         Long id,
@@ -22,7 +21,6 @@ public record CreateProjectResponse(
     public static CreateProjectResponse of(
             Project project,
             List<ProjectRepository> repositories,
-            Map<Long, String> rolesByRepositoryId,
             int importedGithubIssueCount,
             String githubIssueImportStatus
     ) {
@@ -36,10 +34,7 @@ public record CreateProjectResponse(
                 importedGithubIssueCount,
                 githubIssueImportStatus,
                 repositories.stream()
-                        .map(repository -> ConnectedRepository.from(
-                                repository,
-                                rolesByRepositoryId.get(repository.getGithubRepositoryId())
-                        ))
+                        .map(ConnectedRepository::from)
                         .toList()
         );
     }
@@ -53,17 +48,14 @@ public record CreateProjectResponse(
             String role
     ) {
 
-        private static ConnectedRepository from(
-                ProjectRepository repository,
-                String role
-        ) {
+        private static ConnectedRepository from(ProjectRepository repository) {
             return new ConnectedRepository(
                     repository.getGithubRepositoryId(),
                     repository.getGithubInstallationId(),
                     repository.getOwnerLogin(),
                     repository.getRepositoryName(),
                     repository.getHtmlUrl(),
-                    role
+                    repository.getRepositoryRole()
             );
         }
     }

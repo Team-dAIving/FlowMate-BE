@@ -76,16 +76,8 @@ public class ProjectCreationService {
         project.setEndDate(request.endDate());
         project.setStatus(PROJECT_STATUS);
         project.setTeam(team);
-        Map<Long, String> repositoryRoles = repositoryConnections.stream()
-                .collect(Collectors.toMap(
-                        connection -> connection.snapshot().repository().githubRepositoryId(),
-                        RepositoryConnection::role,
-                        (first, ignored) -> first,
-                        LinkedHashMap::new
-                ));
         Map<String, Object> projectTechStack = new LinkedHashMap<>();
         projectTechStack.put("additional", normalizeTechnologies(request.additionalTechStack()));
-        projectTechStack.put("repositoryRoles", repositoryRoles);
         project.setTechStack(projectTechStack);
         Project savedProject = projectRepository.save(project);
 
@@ -103,7 +95,8 @@ public class ProjectCreationService {
                 repositoryConnections.stream()
                         .map(connection -> toRepositoryLink(
                                 savedProject,
-                                connection.snapshot().repository()
+                                connection.snapshot().repository(),
+                                connection.role()
                         ))
                         .toList();
         List<kr.co.daeun.flowmatebe.domain.project.entity.ProjectRepository> savedLinks =
@@ -143,7 +136,6 @@ public class ProjectCreationService {
         return CreateProjectResponse.of(
                 savedProject,
                 savedLinks,
-                repositoryRoles,
                 importedTasks.size(),
                 issueImportStatus
         );
@@ -246,7 +238,8 @@ public class ProjectCreationService {
 
     private kr.co.daeun.flowmatebe.domain.project.entity.ProjectRepository toRepositoryLink(
             Project project,
-            kr.co.daeun.flowmatebe.global.github.dto.GithubRepositoryMetadata metadata
+            kr.co.daeun.flowmatebe.global.github.dto.GithubRepositoryMetadata metadata,
+            String repositoryRole
     ) {
         kr.co.daeun.flowmatebe.domain.project.entity.ProjectRepository link =
                 new kr.co.daeun.flowmatebe.domain.project.entity.ProjectRepository();
@@ -255,6 +248,7 @@ public class ProjectCreationService {
         link.setGithubInstallationId(metadata.installationId());
         link.setOwnerLogin(metadata.ownerLogin());
         link.setRepositoryName(metadata.repositoryName());
+        link.setRepositoryRole(repositoryRole.toUpperCase(Locale.ROOT));
         link.setHtmlUrl(metadata.htmlUrl());
         return link;
     }
