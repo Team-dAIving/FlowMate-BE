@@ -17,6 +17,7 @@ import kr.co.daeun.flowmatebe.domain.user.entity.User;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -50,4 +51,8 @@ public class ProjectMember {
     @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "parts", columnDefinition = "text[]")
     private List<String> parts;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "tech_stack", columnDefinition = "text[]", nullable = false)
+    private List<String> techStack = new ArrayList<>();
 }

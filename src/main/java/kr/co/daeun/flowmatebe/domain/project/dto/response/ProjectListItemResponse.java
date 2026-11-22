@@ -3,7 +3,6 @@ package kr.co.daeun.flowmatebe.domain.project.dto.response;
 import kr.co.daeun.flowmatebe.domain.project.entity.Project;
 
 import java.util.List;
-import java.util.Map;
 
 public record ProjectListItemResponse(
         Long id,
@@ -15,7 +14,7 @@ public record ProjectListItemResponse(
         String teamName,
         String teamThemeColor,
         String leaderName,
-        Map<String, Object> techStack,
+        List<String> techStack,
         List<ProjectMemberSummaryResponse> members,
         long totalTaskCount,
         long completedTaskCount,
@@ -24,6 +23,7 @@ public record ProjectListItemResponse(
 
     public static ProjectListItemResponse of(
             Project project,
+            List<String> techStack,
             List<ProjectMemberSummaryResponse> members,
             String leaderName,
             long totalTaskCount,
@@ -42,7 +42,7 @@ public record ProjectListItemResponse(
                 project.getTeam().getName(),
                 project.getTeam().getThemeColor(),
                 leaderName,
-                project.getTechStack(),
+                techStack,
                 members,
                 totalTaskCount,
                 completedTaskCount,
