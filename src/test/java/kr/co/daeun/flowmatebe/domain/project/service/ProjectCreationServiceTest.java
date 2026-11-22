@@ -78,6 +78,9 @@ class ProjectCreationServiceTest {
         );
         when(projectRepository.save(any(Project.class))).thenAnswer(invocation -> {
             Project project = invocation.getArgument(0);
+            assertThat(project.getDescription()).isEqualTo("프로젝트 관리 서비스");
+            assertThat(project.getDesignText()).isEqualTo("사용자 인증과 업무 관리를 중심으로 설계합니다.");
+            assertThat(project.getSubject()).isEqualTo("MVP 출시");
             project.setId(20L);
             return project;
         });
@@ -86,6 +89,9 @@ class ProjectCreationServiceTest {
         var response = service.create(1L, validRequest());
 
         assertThat(response.id()).isEqualTo(20L);
+        assertThat(response.description()).isEqualTo("프로젝트 관리 서비스");
+        assertThat(response.goal()).isEqualTo("MVP 출시");
+        assertThat(response.designText()).isEqualTo("사용자 인증과 업무 관리를 중심으로 설계합니다.");
         assertThat(response.status()).isEqualTo("IN_PROGRESS");
         assertThat(response.importedGithubIssueCount()).isEqualTo(1);
         assertThat(response.githubIssueImportStatus()).isEqualTo("SUCCESS");
@@ -119,7 +125,8 @@ class ProjectCreationServiceTest {
         return new CreateProjectRequest(
                 "FlowMate",
                 "프로젝트 관리 서비스",
-                "서비스 출시",
+                "MVP 출시",
+                "사용자 인증과 업무 관리를 중심으로 설계합니다.",
                 "web",
                 LocalDate.of(2026, 11, 23),
                 LocalDate.of(2026, 12, 23),

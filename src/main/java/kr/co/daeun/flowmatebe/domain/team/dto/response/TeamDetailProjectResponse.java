@@ -6,7 +6,8 @@ public record TeamDetailProjectResponse(
         Long id,
         String name,
         String description,
-        String subject,
+        String goal,
+        String designText,
         long totalTaskCount,
         long completedTaskCount,
         int progressPercent
@@ -25,6 +26,7 @@ public record TeamDetailProjectResponse(
                 project.getName(),
                 project.getDescription(),
                 project.getSubject(),
+                project.getDesignText(),
                 totalTaskCount,
                 completedTaskCount,
                 progressPercent

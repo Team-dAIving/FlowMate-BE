@@ -9,6 +9,9 @@ import java.util.List;
 public record CreateProjectResponse(
         Long id,
         String name,
+        String description,
+        String goal,
+        String designText,
         String status,
         LocalDate startDate,
         LocalDate endDate,
@@ -27,6 +30,9 @@ public record CreateProjectResponse(
         return new CreateProjectResponse(
                 project.getId(),
                 project.getName(),
+                project.getDescription(),
+                project.getSubject(),
+                project.getDesignText(),
                 project.getStatus(),
                 project.getStartDate(),
                 project.getEndDate(),

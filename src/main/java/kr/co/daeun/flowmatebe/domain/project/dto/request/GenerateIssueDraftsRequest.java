@@ -24,6 +24,10 @@ public record GenerateIssueDraftsRequest(
         @Size(max = 2000, message = "프로젝트 최종 목표는 2000자 이하여야 합니다.")
         String goal,
 
+        @NotBlank(message = "프로젝트 설계 내용은 필수입니다.")
+        @Size(max = 50000, message = "프로젝트 설계 내용은 50000자 이하여야 합니다.")
+        String designText,
+
         @NotBlank(message = "프로젝트 유형은 필수입니다.")
         @Size(max = 50, message = "프로젝트 유형은 50자 이하여야 합니다.")
         String type,
@@ -53,8 +57,8 @@ public record GenerateIssueDraftsRequest(
 
             @NotBlank(message = "프로젝트 멤버의 파트는 필수입니다.")
             @Pattern(
-                    regexp = "^(backend|fullstack|frontend|others|infra)$",
-                    message = "파트는 backend, fullstack, frontend, others, infra 중 하나여야 합니다."
+                    regexp = "^(backend|fullstack|frontend|pm|design|others|infra)$",
+                    message = "파트는 backend, fullstack, frontend, pm, design, others, infra 중 하나여야 합니다."
             )
             String part,
 

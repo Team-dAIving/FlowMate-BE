@@ -71,6 +71,7 @@ public class ProjectCreationService {
         project.setName(request.name().strip());
         project.setDescription(request.description().strip());
         project.setSubject(request.goal().strip());
+        project.setDesignText(request.designText().strip());
         project.setType(request.type().strip().toUpperCase(Locale.ROOT));
         project.setStartDate(request.startDate());
         project.setEndDate(request.endDate());
