@@ -68,6 +68,17 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("completedStatus") String completedStatus
     );
 
+    @Query("""
+            select t
+            from Task t
+            left join fetch t.assigneeMember am
+            left join fetch am.user
+            left join fetch t.githubRepository
+            where t.project.id = :projectId
+            order by t.createdAt desc, t.id desc
+            """)
+    List<Task> findAllWithDetailsByProjectId(@Param("projectId") Long projectId);
+
     interface TeamTaskCount {
 
         Long getTeamId();

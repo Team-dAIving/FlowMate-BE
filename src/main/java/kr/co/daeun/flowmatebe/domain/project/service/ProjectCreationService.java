@@ -194,6 +194,15 @@ public class ProjectCreationService {
     }
 
     private List<RepositoryConnection> validateRepositories(CreateProjectRequest request) {
+        long commonRepositoryCount = request.repositories().stream()
+                .filter(repository -> repository.role().equalsIgnoreCase("COMMON"))
+                .count();
+        if (commonRepositoryCount > 1) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "공통 GitHub 저장소는 최대 한 개만 연결할 수 있습니다."
+            );
+        }
         Set<Long> repositoryIds = new LinkedHashSet<>();
         List<RepositoryConnection> connections = new ArrayList<>();
         for (CreateProjectRequest.Repository repository : request.repositories()) {
