@@ -2,8 +2,12 @@ package kr.co.daeun.flowmatebe.global.auth.controller;
 
 import jakarta.validation.Valid;
 import kr.co.daeun.flowmatebe.global.auth.dto.AuthUserResponse;
+import kr.co.daeun.flowmatebe.global.auth.dto.TokenExchangeRequest;
+import kr.co.daeun.flowmatebe.global.auth.dto.TokenExchangeResponse;
 import kr.co.daeun.flowmatebe.global.auth.dto.UpdateNicknameRequest;
+import kr.co.daeun.flowmatebe.global.auth.oauth.OAuthClient;
 import kr.co.daeun.flowmatebe.global.auth.service.AuthService;
+import kr.co.daeun.flowmatebe.global.auth.service.OAuthCodeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,6 +25,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final OAuthCodeService oauthCodeService;
+
+    @PostMapping("/token")
+    public ResponseEntity<TokenExchangeResponse> exchangeToken(
+            @Valid @RequestBody TokenExchangeRequest request
+    ) {
+        OAuthClient client = OAuthClient.from(request.client()).orElseThrow();
+        return ResponseEntity.ok(oauthCodeService.exchange(request.code(), client));
+    }
 
     @GetMapping("/me")
     public ResponseEntity<AuthUserResponse> getCurrentUser(

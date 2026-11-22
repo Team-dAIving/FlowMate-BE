@@ -26,6 +26,9 @@ spring:
                             - read:user
                             - user:email
 
+server:
+    forward-headers-strategy: framework
+
 app:
     ai:
         base-url: ${AI_BASE_URL:http://127.0.0.1:8001}
@@ -33,5 +36,7 @@ app:
         jwt-secret: ${JWT_SECRET}
         jwt-issuer: ${JWT_ISSUER:flowmate}
         access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:PT1H}
-        frontend-origin: ${FRONTEND_ORIGIN:http://localhost:5173}
-        frontend-redirect-uri: ${FRONTEND_OAUTH_REDIRECT_URI:http://localhost:5173/oauth/callback}
+        frontend-origin: ${FRONTEND_ORIGIN:https://flow-mate-fe.vercel.app}
+        frontend-redirect-uri: ${FRONTEND_OAUTH_REDIRECT_URI:https://flow-mate-fe.vercel.app/oauth/callback}
+        desktop-redirect-uri: ${DESKTOP_OAUTH_REDIRECT_URI:flowmate://oauth/callback}
+        oauth-code-ttl: ${OAUTH_CODE_TTL:PT2M}

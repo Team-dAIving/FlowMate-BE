@@ -3,6 +3,7 @@ package kr.co.daeun.flowmatebe.global.auth.config;
 import kr.co.daeun.flowmatebe.global.auth.oauth.FlowMateOAuth2UserService;
 import kr.co.daeun.flowmatebe.global.auth.oauth.OAuth2LoginFailureHandler;
 import kr.co.daeun.flowmatebe.global.auth.oauth.OAuth2LoginSuccessHandler;
+import kr.co.daeun.flowmatebe.global.auth.oauth.OAuthClientContext;
 import kr.co.daeun.flowmatebe.global.error.ApiErrorResponseWriter;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -23,7 +24,9 @@ class SecurityConfigTest {
                 "flowmate",
                 Duration.ofHours(1),
                 "http://localhost:5173",
-                "http://localhost:5173/oauth/callback"
+                "http://localhost:5173/oauth/callback",
+                "flowmate://oauth/callback",
+                Duration.ofMinutes(2)
         );
         SecurityConfig securityConfig = new SecurityConfig(
                 authProperties,
@@ -31,14 +34,21 @@ class SecurityConfigTest {
                 mock(OAuth2LoginSuccessHandler.class),
                 mock(OAuth2LoginFailureHandler.class),
                 mock(JwtDecoder.class),
-                mock(ApiErrorResponseWriter.class)
+                mock(ApiErrorResponseWriter.class),
+                new OAuthClientContext()
         );
         CorsConfiguration configuration = securityConfig.corsConfigurationSource()
                 .getCorsConfiguration(new MockHttpServletRequest());
 
         assertThat(configuration).isNotNull();
         assertThat(configuration.getAllowedOrigins())
-                .contains("http://localhost:5173", "null");
+                .contains(
+                        "http://localhost:5173",
+                        "https://flow-mate-fe.vercel.app",
+                        "null"
+                );
+        assertThat(configuration.getAllowedHeaders())
+                .contains("Authorization", "Content-Type");
         assertThat(configuration.checkOrigin("file://")).isEqualTo("file://");
     }
 }
