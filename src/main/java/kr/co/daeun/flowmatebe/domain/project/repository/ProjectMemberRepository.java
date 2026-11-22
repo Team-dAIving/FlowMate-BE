@@ -23,4 +23,13 @@ public interface ProjectMemberRepository extends JpaRepository<ProjectMember, Lo
     List<ProjectMember> findAllWithUserByProjectIds(
             @Param("projectIds") Collection<Long> projectIds
     );
+
+    @Query("""
+            select pm
+            from ProjectMember pm
+            join fetch pm.user
+            where pm.project.id = :projectId
+            order by pm.id
+            """)
+    List<ProjectMember> findAllWithUserByProjectId(@Param("projectId") Long projectId);
 }

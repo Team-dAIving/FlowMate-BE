@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface ProjectRepository extends JpaRepository<Project, Long> {
 
@@ -22,4 +23,21 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
             order by pm.project.createdAt desc, pm.project.id desc
             """)
     List<Project> findAllByMemberUserIdOrderByCreatedAtDesc(@Param("userId") Long userId);
+
+    @Query("""
+            select p
+            from Project p
+            join fetch p.team
+            where p.id = :projectId
+              and exists (
+                  select pm.id
+                  from ProjectMember pm
+                  where pm.project = p
+                    and pm.user.id = :userId
+              )
+            """)
+    Optional<Project> findAccessibleByIdAndUserId(
+            @Param("projectId") Long projectId,
+            @Param("userId") Long userId
+    );
 }

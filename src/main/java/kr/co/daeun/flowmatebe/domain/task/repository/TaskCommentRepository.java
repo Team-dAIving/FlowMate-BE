@@ -23,4 +23,19 @@ public interface TaskCommentRepository extends JpaRepository<TaskComment, Long> 
     @Modifying
     @Query("delete from TaskComment tc where tc.task.id = :taskId")
     void deleteAllByTaskId(@Param("taskId") Long taskId);
+
+    @Query("""
+            select tc.task.id as taskId, count(tc.id) as commentCount
+            from TaskComment tc
+            where tc.task.id in :taskIds
+            group by tc.task.id
+            """)
+    List<TaskCommentCount> countByTaskIds(@Param("taskIds") List<Long> taskIds);
+
+    interface TaskCommentCount {
+
+        Long getTaskId();
+
+        long getCommentCount();
+    }
 }
