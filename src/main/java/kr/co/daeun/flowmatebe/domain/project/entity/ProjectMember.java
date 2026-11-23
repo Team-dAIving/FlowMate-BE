@@ -48,11 +48,9 @@ public class ProjectMember {
     @Column(columnDefinition = "text")
     private String role;
 
-    @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "parts", columnDefinition = "text[]")
     private List<String> parts;
 
-    @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "tech_stack", columnDefinition = "text[]", nullable = false)
     private List<String> techStack = new ArrayList<>();
 }
