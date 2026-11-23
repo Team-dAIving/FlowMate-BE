@@ -94,6 +94,11 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     Optional<Task> findByIdAndProject_Id(Long taskId, Long projectId);
 
+    List<Task> findAllByGithubRepository_GithubRepositoryIdAndGithubIssueNumber(
+            Long githubRepositoryId,
+            Integer githubIssueNumber
+    );
+
     interface TeamTaskCount {
 
         Long getTeamId();

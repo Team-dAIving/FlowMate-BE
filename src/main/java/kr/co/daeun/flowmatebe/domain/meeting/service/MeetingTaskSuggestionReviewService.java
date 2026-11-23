@@ -95,16 +95,13 @@ public class MeetingTaskSuggestionReviewService {
                 suggestionId
         );
         String actionType = suggestion.getSuggestionType();
-        if ("NEEDS_REVIEW".equals(actionType)) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "검토가 필요한 제안입니다. 신규 업무인지 기존 업무 수정인지 먼저 확정해 주세요."
-            );
-        }
-
         CreateTaskResponse taskResponse;
-        if ("CREATE".equals(actionType)) {
+        if ("CREATE".equals(actionType) || "NEEDS_REVIEW".equals(actionType)) {
             taskResponse = createTask(currentUserId, suggestion, request);
+            if ("NEEDS_REVIEW".equals(actionType)) {
+                suggestion.setSuggestionType("CREATE");
+                suggestion.setTargetTaskId(null);
+            }
         } else if ("UPDATE".equals(actionType)) {
             if (Boolean.TRUE.equals(request.createGithubIssue())) {
                 throw new ResponseStatusException(

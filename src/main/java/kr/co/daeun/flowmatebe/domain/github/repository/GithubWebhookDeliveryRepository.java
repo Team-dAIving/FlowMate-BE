@@ -12,4 +12,11 @@ public interface GithubWebhookDeliveryRepository
             String eventName,
             String action
     );
+
+    List<GithubWebhookDelivery>
+    findTop20ByEventNameAndActionInAndProcessingStatusOrderByReceivedAtAsc(
+            String eventName,
+            List<String> actions,
+            String processingStatus
+    );
 }
