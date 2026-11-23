@@ -15,7 +15,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import kr.co.daeun.flowmatebe.domain.user.entity.User;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -46,9 +45,29 @@ public class ProjectMember {
     @Column(columnDefinition = "text")
     private String role;
 
+    @SuppressWarnings("JpaAttributeTypeInspection")
     @Column(name = "parts")
-    private List<String> parts;
+    private String[] parts;
 
+    @SuppressWarnings("JpaAttributeTypeInspection")
     @Column(name = "tech_stack", nullable = false)
-    private List<String> techStack = new ArrayList<>();
+    private String[] techStack = new String[0];
+
+    public List<String> getParts() {
+        return parts == null ? null : List.of(parts);
+    }
+
+    public void setParts(List<String> parts) {
+        this.parts = parts == null ? null : parts.toArray(String[]::new);
+    }
+
+    public List<String> getTechStack() {
+        return List.of(techStack);
+    }
+
+    public void setTechStack(List<String> techStack) {
+        this.techStack = techStack == null
+                ? new String[0]
+                : techStack.toArray(String[]::new);
+    }
 }
