@@ -6,6 +6,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -16,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.hamcrest.Matchers.startsWith;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -25,8 +27,27 @@ class FlowMateBeApplicationTests {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     @Test
     void contextLoads() {
+    }
+
+    @Test
+    void 프로젝트_멤버의_목록_필드는_SQL_ARRAY로_매핑한다() {
+        var columnTypes = jdbcTemplate.queryForList("""
+                select column_name, data_type
+                from information_schema.columns
+                where table_name = 'project_members'
+                  and column_name in ('parts', 'tech_stack')
+                order by column_name
+                """);
+
+        assertThat(columnTypes).hasSize(2);
+        assertThat(columnTypes)
+                .extracting(row -> String.valueOf(row.get("data_type")))
+                .allSatisfy(type -> assertThat(type).containsIgnoringCase("ARRAY"));
     }
 
     @Test
