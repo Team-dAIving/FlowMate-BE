@@ -30,8 +30,17 @@ server:
     forward-headers-strategy: framework
 
 app:
+    storage:
+        s3:
+            region: ${AWS_REGION:ap-southeast-2}
+            bucket: ${S3_BUCKET:}
+            recording-prefix: ${S3_RECORDING_PREFIX:flowmate/meetings}
+            upload-url-ttl: ${S3_UPLOAD_URL_TTL:PT15M}
+    meeting:
+        stt-poll-interval: ${MEETING_STT_POLL_INTERVAL:PT5S}
     ai:
         base-url: ${AI_BASE_URL:http://127.0.0.1:8001}
+        transcription-timeout: ${AI_TRANSCRIPTION_TIMEOUT:PT10M}
     github:
         slug: ${GITHUB_APP_SLUG:}
         app-id: ${GITHUB_APP_ID:}
