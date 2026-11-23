@@ -1,10 +1,13 @@
 package kr.co.daeun.flowmatebe.domain.task.service;
 
 import kr.co.daeun.flowmatebe.domain.project.entity.ProjectMember;
+import kr.co.daeun.flowmatebe.domain.project.dto.response.ProjectTaskResponse;
 import kr.co.daeun.flowmatebe.domain.project.repository.ProjectMemberRepository;
+import kr.co.daeun.flowmatebe.domain.project.repository.ProjectRepository;
 import kr.co.daeun.flowmatebe.domain.task.dto.request.CreateTaskCommentRequest;
 import kr.co.daeun.flowmatebe.domain.task.dto.response.TaskCommentResponse;
 import kr.co.daeun.flowmatebe.domain.task.dto.response.TaskDetailResponse;
+import kr.co.daeun.flowmatebe.domain.task.dto.response.MyProjectTasksResponse;
 import kr.co.daeun.flowmatebe.domain.task.entity.Task;
 import kr.co.daeun.flowmatebe.domain.task.entity.TaskComment;
 import kr.co.daeun.flowmatebe.domain.task.repository.TaskCommentRepository;
@@ -16,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +30,43 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final TaskCommentRepository taskCommentRepository;
     private final ProjectMemberRepository projectMemberRepository;
+    private final ProjectRepository projectRepository;
+
+    public MyProjectTasksResponse getMyProjectTasks(Long currentUserId) {
+        var projects = projectRepository
+                .findAllByMemberUserIdOrderByCreatedAtDesc(currentUserId);
+        if (projects.isEmpty()) {
+            return new MyProjectTasksResponse(List.of());
+        }
+
+        List<Long> projectIds = projects.stream()
+                .map(project -> project.getId())
+                .toList();
+        List<Task> tasks = taskRepository.findAllWithDetailsByProjectIds(projectIds);
+        Map<Long, Long> commentCounts = commentCounts(tasks);
+        Map<Long, List<ProjectTaskResponse>> tasksByProjectId = tasks.stream()
+                .collect(Collectors.groupingBy(
+                        task -> task.getProject().getId(),
+                        Collectors.mapping(
+                                task -> ProjectTaskResponse.of(
+                                        task,
+                                        commentCounts.getOrDefault(task.getId(), 0L)
+                                ),
+                                Collectors.toList()
+                        )
+                ));
+
+        return new MyProjectTasksResponse(projects.stream()
+                .map(project -> new MyProjectTasksResponse.ProjectTasks(
+                        project.getId(),
+                        project.getName(),
+                        project.getStatus(),
+                        project.getStartDate(),
+                        project.getEndDate(),
+                        tasksByProjectId.getOrDefault(project.getId(), List.of())
+                ))
+                .toList());
+    }
 
     public TaskDetailResponse getTaskDetail(Long currentUserId, Long taskId) {
         Task task = getAccessibleTask(currentUserId, taskId);
@@ -77,5 +119,17 @@ public class TaskService {
                 HttpStatus.NOT_FOUND,
                 "업무를 찾을 수 없습니다: " + taskId
         );
+    }
+
+    private Map<Long, Long> commentCounts(List<Task> tasks) {
+        if (tasks.isEmpty()) {
+            return Map.of();
+        }
+        return taskCommentRepository.countByTaskIds(tasks.stream().map(Task::getId).toList())
+                .stream()
+                .collect(Collectors.toMap(
+                        TaskCommentRepository.TaskCommentCount::getTaskId,
+                        TaskCommentRepository.TaskCommentCount::getCommentCount
+                ));
     }
 }

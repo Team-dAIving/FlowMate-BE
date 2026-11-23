@@ -8,6 +8,8 @@ import kr.co.daeun.flowmatebe.domain.project.entity.ProjectRepository;
 import kr.co.daeun.flowmatebe.domain.project.repository.ProjectMemberRepository;
 import kr.co.daeun.flowmatebe.domain.project.repository.ProjectRepositoryLinkRepository;
 import kr.co.daeun.flowmatebe.domain.task.entity.Task;
+import kr.co.daeun.flowmatebe.domain.task.dto.request.CreateTaskRequest;
+import kr.co.daeun.flowmatebe.domain.task.dto.response.CreateTaskResponse;
 import kr.co.daeun.flowmatebe.domain.task.repository.TaskRepository;
 import kr.co.daeun.flowmatebe.global.github.dto.GithubCreatedIssue;
 import kr.co.daeun.flowmatebe.global.github.service.GithubInstallationClient;
@@ -16,6 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -37,6 +41,7 @@ public class ProjectIssueRegistrationService {
     private static final String SYNCED = "SYNCED";
     private static final String SYNC_FAILED = "FAILED";
     private static final String SYNC_NOT_LINKED = "NOT_LINKED";
+    private static final ZoneId PROJECT_ZONE = ZoneId.of("Asia/Seoul");
 
     private final kr.co.daeun.flowmatebe.domain.project.repository.ProjectRepository projectRepository;
     private final ProjectMemberRepository projectMemberRepository;
@@ -48,6 +53,39 @@ public class ProjectIssueRegistrationService {
             Long currentUserId,
             Long projectId,
             RegisterIssueDraftsRequest request
+    ) {
+        return registerIssues(currentUserId, projectId, request.issues());
+    }
+
+    public CreateTaskResponse createManualTask(
+            Long currentUserId,
+            Long projectId,
+            CreateTaskRequest request
+    ) {
+        RegisterIssueDraftsRequest.Issue issue = new RegisterIssueDraftsRequest.Issue(
+                request.title(),
+                request.description(),
+                request.priority(),
+                request.assigneeId(),
+                LocalDate.now(PROJECT_ZONE),
+                request.dueDate(),
+                request.estimatedHours(),
+                request.labels(),
+                request.createGithubIssue(),
+                request.githubRepositoryId()
+        );
+        RegisterIssueDraftsResponse response = registerIssues(
+                currentUserId,
+                projectId,
+                List.of(issue)
+        );
+        return CreateTaskResponse.from(response.tasks().get(0));
+    }
+
+    private RegisterIssueDraftsResponse registerIssues(
+            Long currentUserId,
+            Long projectId,
+            List<RegisterIssueDraftsRequest.Issue> issues
     ) {
         Project project = projectRepository.findAccessibleByIdAndUserId(projectId, currentUserId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -69,7 +107,7 @@ public class ProjectIssueRegistrationService {
                         Function.identity()
                 ));
 
-        List<Registration> registrations = request.issues().stream()
+        List<Registration> registrations = issues.stream()
                 .map(issue -> prepareRegistration(
                         project,
                         membersByUserId,

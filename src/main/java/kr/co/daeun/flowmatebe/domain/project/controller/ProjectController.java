@@ -10,6 +10,7 @@ import kr.co.daeun.flowmatebe.domain.project.dto.response.ProjectDetailResponse;
 import kr.co.daeun.flowmatebe.domain.project.dto.response.ProjectListResponse;
 import kr.co.daeun.flowmatebe.domain.project.dto.response.ProjectMeetingsResponse;
 import kr.co.daeun.flowmatebe.domain.project.dto.response.ProjectMembersResponse;
+import kr.co.daeun.flowmatebe.domain.project.dto.response.ProjectRepositoriesResponse;
 import kr.co.daeun.flowmatebe.domain.project.dto.response.ProjectTasksResponse;
 import kr.co.daeun.flowmatebe.domain.project.dto.response.RegisterIssueDraftsResponse;
 import kr.co.daeun.flowmatebe.domain.project.service.ProjectDetailService;
@@ -17,6 +18,8 @@ import kr.co.daeun.flowmatebe.domain.project.service.ProjectIssueDraftService;
 import kr.co.daeun.flowmatebe.domain.project.service.ProjectIssueRegistrationService;
 import kr.co.daeun.flowmatebe.domain.project.service.ProjectCreationService;
 import kr.co.daeun.flowmatebe.domain.project.service.ProjectService;
+import kr.co.daeun.flowmatebe.domain.task.dto.request.CreateTaskRequest;
+import kr.co.daeun.flowmatebe.domain.task.dto.response.CreateTaskResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -99,6 +102,16 @@ public class ProjectController {
         );
     }
 
+    @GetMapping("/{projectId}/repositories")
+    public ResponseEntity<ProjectRepositoriesResponse> getProjectRepositories(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long projectId
+    ) {
+        return ResponseEntity.ok(
+                projectDetailService.getProjectRepositories(userId(jwt), projectId)
+        );
+    }
+
     @PostMapping("/issue-drafts")
     public ResponseEntity<GenerateIssueDraftsResponse> generateIssueDrafts(
             @AuthenticationPrincipal Jwt jwt,
@@ -122,6 +135,22 @@ public class ProjectController {
         );
         return ResponseEntity
                 .created(URI.create("/api/projects/" + projectId + "/tasks"))
+                .body(response);
+    }
+
+    @PostMapping("/{projectId}/tasks/manual")
+    public ResponseEntity<CreateTaskResponse> createManualTask(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long projectId,
+            @Valid @RequestBody CreateTaskRequest request
+    ) {
+        CreateTaskResponse response = projectIssueRegistrationService.createManualTask(
+                userId(jwt),
+                projectId,
+                request
+        );
+        return ResponseEntity
+                .created(URI.create("/api/tasks/" + response.taskId()))
                 .body(response);
     }
 

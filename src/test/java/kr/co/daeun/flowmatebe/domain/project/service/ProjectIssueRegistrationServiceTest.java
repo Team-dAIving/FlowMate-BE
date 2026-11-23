@@ -7,6 +7,7 @@ import kr.co.daeun.flowmatebe.domain.project.entity.ProjectRepository;
 import kr.co.daeun.flowmatebe.domain.project.repository.ProjectMemberRepository;
 import kr.co.daeun.flowmatebe.domain.project.repository.ProjectRepositoryLinkRepository;
 import kr.co.daeun.flowmatebe.domain.task.entity.Task;
+import kr.co.daeun.flowmatebe.domain.task.dto.request.CreateTaskRequest;
 import kr.co.daeun.flowmatebe.domain.task.repository.TaskRepository;
 import kr.co.daeun.flowmatebe.domain.user.entity.User;
 import kr.co.daeun.flowmatebe.global.github.dto.GithubCreatedIssue;
@@ -112,6 +113,73 @@ class ProjectIssueRegistrationServiceTest {
         assertThat(response.tasks().get(0).githubSyncStatus()).isEqualTo("FAILED");
         assertThat(response.tasks().get(0).githubError())
                 .isEqualTo("GitHub App에 이슈 생성 권한이 없습니다.");
+    }
+
+    @Test
+    void 수동으로_업무_한_건을_등록한다() {
+        Project project = project();
+        ProjectMember backendMember = member(project, 7L, "backend");
+        ProjectRepository backendRepository = repository(project, 1001L, "BACKEND");
+        stubProject(project, backendMember, backendRepository);
+        assignTaskIdsOnSave();
+
+        var response = service.createManualTask(1L, 20L, new CreateTaskRequest(
+                "  로그인 문서 작성  ",
+                "  API 사용법을 정리합니다.  ",
+                "medium",
+                7L,
+                LocalDate.of(2026, 11, 30),
+                3.5,
+                null,
+                false,
+                null
+        ));
+
+        assertThat(response.taskId()).isEqualTo(100L);
+        assertThat(response.title()).isEqualTo("로그인 문서 작성");
+        assertThat(response.githubIssueRequested()).isFalse();
+        assertThat(response.githubSyncStatus()).isEqualTo("NOT_LINKED");
+        assertThat(response.githubRepositoryId()).isNull();
+        verify(githubClient, never()).createIssue(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void 수동_업무를_선택한_저장소의_GitHub_이슈로_생성한다() {
+        Project project = project();
+        ProjectMember backendMember = member(project, 7L, "backend");
+        ProjectRepository backendRepository = repository(project, 1001L, "BACKEND");
+        stubProject(project, backendMember, backendRepository);
+        assignTaskIdsOnSave();
+        when(githubClient.createIssue(
+                500L,
+                "Team-dAIving",
+                "FlowMate-BE",
+                "로그인 API 구현",
+                "JWT 로그인을 구현합니다.",
+                List.of("feature")
+        )).thenReturn(new GithubCreatedIssue(
+                31,
+                "https://github.com/Team-dAIving/FlowMate-BE/issues/31"
+        ));
+
+        var response = service.createManualTask(1L, 20L, new CreateTaskRequest(
+                "로그인 API 구현",
+                "JWT 로그인을 구현합니다.",
+                "HIGH",
+                7L,
+                LocalDate.of(2026, 11, 30),
+                8.0,
+                List.of("feature"),
+                true,
+                1001L
+        ));
+
+        assertThat(response.githubIssueRequested()).isTrue();
+        assertThat(response.githubSyncStatus()).isEqualTo("SYNCED");
+        assertThat(response.githubRepositoryId()).isEqualTo(1001L);
+        assertThat(response.githubIssueNumber()).isEqualTo(31);
+        assertThat(response.githubIssueUrl())
+                .isEqualTo("https://github.com/Team-dAIving/FlowMate-BE/issues/31");
     }
 
     @Test

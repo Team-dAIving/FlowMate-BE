@@ -157,6 +157,26 @@ class ProjectDetailServiceTest {
     }
 
     @Test
+    void 프로젝트에_연결된_GitHub_저장소_목록을_반환한다() {
+        Project project = project(20L);
+        ProjectRepository repository = commonRepository(project);
+        when(projectRepository.findAccessibleByIdAndUserId(20L, 1L))
+                .thenReturn(Optional.of(project));
+        when(repositoryLinkRepository.findAllByProject_IdOrderByIdAsc(20L))
+                .thenReturn(List.of(repository));
+
+        var response = service.getProjectRepositories(1L, 20L);
+
+        assertThat(response.totalCount()).isEqualTo(1);
+        assertThat(response.repositories()).singleElement().satisfies(item -> {
+            assertThat(item.githubRepositoryId()).isEqualTo(500L);
+            assertThat(item.owner()).isEqualTo("flowmate");
+            assertThat(item.name()).isEqualTo("flowmate-common");
+            assertThat(item.role()).isEqualTo("COMMON");
+        });
+    }
+
+    @Test
     void 프로젝트_멤버가_아니면_상세_리소스를_노출하지_않는다() {
         when(projectRepository.findAccessibleByIdAndUserId(20L, 99L))
                 .thenReturn(Optional.empty());
