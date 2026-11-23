@@ -47,6 +47,7 @@ app:
         app-id: ${GITHUB_APP_ID:}
         private-key-base64: ${GITHUB_APP_PRIVATE_KEY_BASE64:}
         webhook-secret: ${GITHUB_WEBHOOK_SECRET:}
+        webhook-poll-interval: ${GITHUB_WEBHOOK_POLL_INTERVAL:PT5S}
         installation-state-ttl: ${GITHUB_INSTALLATION_STATE_TTL:PT10M}
     auth:
         jwt-secret: ${JWT_SECRET}

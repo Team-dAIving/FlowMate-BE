@@ -84,6 +84,44 @@ class MeetingTaskSuggestionReviewServiceTest {
     }
 
     @Test
+    void 검토_필요_제안을_수정_없이_승인하면_신규_업무를_생성한다() {
+        MeetingTaskSuggestion suggestion = suggestion("NEEDS_REVIEW");
+        suggestion.setTargetTaskId(77L);
+        suggestion.setProposedData(new LinkedHashMap<>(Map.of(
+                "actionType", "NEEDS_REVIEW",
+                "targetTaskId", 77L,
+                "title", "회의 업무",
+                "description", "회의에서 제안된 업무",
+                "dueDate", "2026-11-30"
+        )));
+        when(suggestionRepository.findAccessibleByIdForUpdate(40L, 20L, 1L))
+                .thenReturn(Optional.of(suggestion));
+        when(issueRegistrationService.createManualTask(any(), any(), any()))
+                .thenReturn(new CreateTaskResponse(
+                        100L, "회의 업무", false, "NOT_LINKED", null, null, null, null
+                ));
+
+        var response = service.approve(
+                1L, 20L, 40L,
+                new ApproveMeetingTaskSuggestionRequest(false, null, List.of())
+        );
+
+        ArgumentCaptor<CreateTaskRequest> request = ArgumentCaptor.forClass(CreateTaskRequest.class);
+        verify(issueRegistrationService).createManualTask(
+                org.mockito.ArgumentMatchers.eq(1L),
+                org.mockito.ArgumentMatchers.eq(10L),
+                request.capture()
+        );
+        assertThat(request.getValue().priority()).isEqualTo("MEDIUM");
+        assertThat(response.actionType()).isEqualTo("CREATE");
+        assertThat(response.reviewStatus()).isEqualTo("APPROVED");
+        assertThat(response.taskId()).isEqualTo(100L);
+        assertThat(suggestion.getTargetTaskId()).isNull();
+        assertThat(suggestion.getProposedData()).containsEntry("actionType", "NEEDS_REVIEW")
+                .containsEntry("targetTaskId", 77L);
+    }
+
+    @Test
     void 신규_업무_제안을_승인하면_Task와_GitHub_Issue를_생성한다() {
         MeetingTaskSuggestion suggestion = suggestion("CREATE");
         suggestion.setProposedData(new LinkedHashMap<>(Map.of(
