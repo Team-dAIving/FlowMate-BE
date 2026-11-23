@@ -6,5 +6,7 @@ public enum MeetingProcessingStatus {
     STT_QUEUED,
     STT_IN_PROGRESS,
     STT_COMPLETED,
+    ANALYZING,
+    COMPLETED,
     FAILED
 }

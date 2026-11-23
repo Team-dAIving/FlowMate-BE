@@ -10,6 +10,8 @@ import java.util.List;
 public interface MeetingTaskSuggestionRepository
         extends JpaRepository<MeetingTaskSuggestion, Long> {
 
+    void deleteAllByMeeting_Id(Long meetingId);
+
     @Query("""
             select mts.meeting.id as meetingId, count(mts.id) as suggestionCount
             from MeetingTaskSuggestion mts

@@ -8,6 +8,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -63,7 +65,7 @@ public class Meeting {
     private String summary;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    private Map<String, Object> decisions;
+    private List<Map<String, Object>> decisions = new ArrayList<>();
 
     @JdbcTypeCode(SqlTypes.JSON)
     private List<String> topics = new ArrayList<>();
@@ -84,4 +86,8 @@ public class Meeting {
 
     @Column(name = "duration_seconds")
     private Long durationSeconds;
+
+    @OneToMany(mappedBy = "meeting", fetch = FetchType.LAZY)
+    @OrderBy("id ASC")
+    private List<MeetingTaskSuggestion> taskSuggestions = new ArrayList<>();
 }
