@@ -11,6 +11,7 @@ import kr.co.daeun.flowmatebe.domain.meeting.entity.MeetingProcessingStatus;
 import kr.co.daeun.flowmatebe.domain.meeting.repository.MeetingRepository;
 import kr.co.daeun.flowmatebe.domain.project.entity.Project;
 import kr.co.daeun.flowmatebe.domain.project.repository.ProjectRepository;
+import kr.co.daeun.flowmatebe.domain.project.repository.ProjectMemberRepository;
 import kr.co.daeun.flowmatebe.global.ai.client.AiTranscriptionClient;
 import kr.co.daeun.flowmatebe.global.ai.dto.AiTranscriptionResponse;
 import kr.co.daeun.flowmatebe.global.storage.service.MeetingRecordingStorage;
@@ -38,6 +39,7 @@ public class MeetingService {
 
     private final MeetingRepository meetingRepository;
     private final ProjectRepository projectRepository;
+    private final ProjectMemberRepository projectMemberRepository;
     private final MeetingRecordingStorage recordingStorage;
     private final AiTranscriptionClient transcriptionClient;
 
@@ -119,7 +121,13 @@ public class MeetingService {
 
     @Transactional(readOnly = true)
     public MeetingResponse get(Long currentUserId, Long meetingId) {
-        return MeetingResponse.from(getAccessibleMeeting(currentUserId, meetingId));
+        Meeting meeting = getAccessibleMeeting(currentUserId, meetingId);
+        return MeetingResponse.from(
+                meeting,
+                projectMemberRepository.findAllWithUserByProjectId(
+                        meeting.getProject().getId()
+                )
+        );
     }
 
     @Transactional
