@@ -20,6 +20,14 @@ spring:
                         client-secret: test-client-secret
 
 app:
+    storage:
+        s3:
+            region: ap-northeast-2
+            bucket: flowmate-test-recordings
+            recording-prefix: flowmate/meetings
+            upload-url-ttl: PT15M
+    meeting:
+        stt-poll-interval: PT1H
     ai:
         base-url: http://127.0.0.1:8001
     github:

@@ -27,4 +27,18 @@ public class AiApiConfig {
                 .defaultHeader("ngrok-skip-browser-warning", "true")
                 .build();
     }
+
+    @Bean
+    @Qualifier("aiTranscriptionRestClient")
+    public RestClient aiTranscriptionRestClient(AiProperties properties) {
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(Duration.ofSeconds(5));
+        requestFactory.setReadTimeout(properties.transcriptionTimeout());
+        return RestClient.builder()
+                .baseUrl(properties.baseUrl())
+                .requestFactory(requestFactory)
+                .defaultHeader(HttpHeaders.ACCEPT, "application/json")
+                .defaultHeader("ngrok-skip-browser-warning", "true")
+                .build();
+    }
 }

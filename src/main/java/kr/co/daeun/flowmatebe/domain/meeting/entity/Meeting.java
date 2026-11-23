@@ -18,6 +18,8 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Entity
@@ -47,14 +49,34 @@ public class Meeting {
     @Column(columnDefinition = "text")
     private String transcript;
 
+    @Column(name = "transcription_job_id", length = 255)
+    private String transcriptionJobId;
+
+    @Column(name = "transcript_language", length = 20)
+    private String transcriptLanguage;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "transcript_segments")
+    private List<Map<String, Object>> transcriptSegments = new ArrayList<>();
+
     @Column(columnDefinition = "text")
     private String summary;
 
     @JdbcTypeCode(SqlTypes.JSON)
     private Map<String, Object> decisions;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    private List<String> topics = new ArrayList<>();
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "unresolved_items")
+    private List<String> unresolvedItems = new ArrayList<>();
+
     @Column(name = "processing_status", columnDefinition = "text")
     private String processingStatus;
+
+    @Column(name = "failure_reason", columnDefinition = "text")
+    private String failureReason;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
