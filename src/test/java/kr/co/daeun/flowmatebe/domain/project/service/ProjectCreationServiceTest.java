@@ -85,6 +85,13 @@ class ProjectCreationServiceTest {
             return project;
         });
         when(repositoryLinkRepository.saveAll(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(taskRepository.saveAll(any())).thenAnswer(invocation -> {
+            List<kr.co.daeun.flowmatebe.domain.task.entity.Task> tasks = invocation.getArgument(0);
+            assertThat(tasks).allSatisfy(task ->
+                    assertThat(task.getPlanningStatus()).isEqualTo("CONFIRMED")
+            );
+            return tasks;
+        });
 
         var response = service.create(1L, validRequest());
 

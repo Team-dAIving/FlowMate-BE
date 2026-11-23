@@ -2,6 +2,7 @@ package kr.co.daeun.flowmatebe.domain.project.controller;
 
 import jakarta.validation.Valid;
 import kr.co.daeun.flowmatebe.domain.project.dto.request.GenerateIssueDraftsRequest;
+import kr.co.daeun.flowmatebe.domain.project.dto.request.RegisterIssueDraftsRequest;
 import kr.co.daeun.flowmatebe.domain.project.dto.request.CreateProjectRequest;
 import kr.co.daeun.flowmatebe.domain.project.dto.response.CreateProjectResponse;
 import kr.co.daeun.flowmatebe.domain.project.dto.response.GenerateIssueDraftsResponse;
@@ -10,8 +11,10 @@ import kr.co.daeun.flowmatebe.domain.project.dto.response.ProjectListResponse;
 import kr.co.daeun.flowmatebe.domain.project.dto.response.ProjectMeetingsResponse;
 import kr.co.daeun.flowmatebe.domain.project.dto.response.ProjectMembersResponse;
 import kr.co.daeun.flowmatebe.domain.project.dto.response.ProjectTasksResponse;
+import kr.co.daeun.flowmatebe.domain.project.dto.response.RegisterIssueDraftsResponse;
 import kr.co.daeun.flowmatebe.domain.project.service.ProjectDetailService;
 import kr.co.daeun.flowmatebe.domain.project.service.ProjectIssueDraftService;
+import kr.co.daeun.flowmatebe.domain.project.service.ProjectIssueRegistrationService;
 import kr.co.daeun.flowmatebe.domain.project.service.ProjectCreationService;
 import kr.co.daeun.flowmatebe.domain.project.service.ProjectService;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +38,7 @@ public class ProjectController {
     private final ProjectService projectService;
     private final ProjectDetailService projectDetailService;
     private final ProjectIssueDraftService projectIssueDraftService;
+    private final ProjectIssueRegistrationService projectIssueRegistrationService;
     private final ProjectCreationService projectCreationService;
 
     @PostMapping
@@ -103,6 +107,22 @@ public class ProjectController {
         return ResponseEntity.ok(
                 projectIssueDraftService.generate(userId(jwt), request)
         );
+    }
+
+    @PostMapping("/{projectId}/tasks")
+    public ResponseEntity<RegisterIssueDraftsResponse> registerIssueDrafts(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long projectId,
+            @Valid @RequestBody RegisterIssueDraftsRequest request
+    ) {
+        RegisterIssueDraftsResponse response = projectIssueRegistrationService.register(
+                userId(jwt),
+                projectId,
+                request
+        );
+        return ResponseEntity
+                .created(URI.create("/api/projects/" + projectId + "/tasks"))
+                .body(response);
     }
 
     private Long userId(Jwt jwt) {

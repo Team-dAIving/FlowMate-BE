@@ -4,6 +4,7 @@ import kr.co.daeun.flowmatebe.domain.project.entity.ProjectRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
+import java.util.List;
 
 public interface ProjectRepositoryLinkRepository extends JpaRepository<ProjectRepository, Long> {
 
@@ -13,4 +14,6 @@ public interface ProjectRepositoryLinkRepository extends JpaRepository<ProjectRe
             Long projectId,
             String repositoryRole
     );
+
+    List<ProjectRepository> findAllByProject_IdOrderByIdAsc(Long projectId);
 }
