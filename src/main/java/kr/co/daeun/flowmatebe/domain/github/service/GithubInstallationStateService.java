@@ -21,18 +21,19 @@ import java.util.UUID;
 public class GithubInstallationStateService {
 
     private static final String HMAC_ALGORITHM = "HmacSHA256";
-    private static final String STATE_VERSION = "v1";
+    private static final String STATE_VERSION = "v2";
     private static final String SIGNING_CONTEXT = "github-installation-state:";
 
     private final AuthProperties authProperties;
     private final GithubAppProperties githubAppProperties;
 
-    public InstallationState create(Long currentUserId) {
+    public InstallationState create(Long currentUserId, Long teamId) {
         Instant expiresAt = Instant.now().plus(githubAppProperties.installationStateTtl());
         String payload = String.join(
                 ":",
                 STATE_VERSION,
                 currentUserId.toString(),
+                teamId.toString(),
                 Long.toString(expiresAt.getEpochSecond()),
                 UUID.randomUUID().toString()
         );
@@ -41,7 +42,7 @@ public class GithubInstallationStateService {
         return new InstallationState(encodedPayload + "." + signature, expiresAt);
     }
 
-    public void validate(String state, Long currentUserId) {
+    public ValidatedInstallationState validate(String state, Long currentUserId) {
         try {
             String[] tokenParts = state.split("\\.", -1);
             if (tokenParts.length != 2) {
@@ -57,13 +58,14 @@ public class GithubInstallationStateService {
                 throw invalidState();
             }
 
-            String[] payloadParts = payload.split(":", 4);
-            if (payloadParts.length != 4
+            String[] payloadParts = payload.split(":", 5);
+            if (payloadParts.length != 5
                     || !STATE_VERSION.equals(payloadParts[0])
                     || !currentUserId.toString().equals(payloadParts[1])
-                    || Instant.now().getEpochSecond() >= Long.parseLong(payloadParts[2])) {
+                    || Instant.now().getEpochSecond() >= Long.parseLong(payloadParts[3])) {
                 throw invalidState();
             }
+            return new ValidatedInstallationState(Long.parseLong(payloadParts[2]));
         } catch (IllegalArgumentException exception) {
             throw invalidState();
         }
@@ -94,5 +96,8 @@ public class GithubInstallationStateService {
     }
 
     public record InstallationState(String value, Instant expiresAt) {
+    }
+
+    public record ValidatedInstallationState(Long teamId) {
     }
 }

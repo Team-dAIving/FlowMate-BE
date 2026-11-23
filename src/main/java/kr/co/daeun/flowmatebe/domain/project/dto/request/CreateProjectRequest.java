@@ -80,10 +80,6 @@ public record CreateProjectRequest(
     }
 
     public record Repository(
-            @NotNull(message = "GitHub installation ID는 필수입니다.")
-            @Positive(message = "GitHub installation ID는 양수여야 합니다.")
-            Long installationId,
-
             @NotNull(message = "GitHub repository ID는 필수입니다.")
             @Positive(message = "GitHub repository ID는 양수여야 합니다.")
             Long githubRepositoryId,

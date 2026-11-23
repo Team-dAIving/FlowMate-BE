@@ -1,6 +1,7 @@
 package kr.co.daeun.flowmatebe.global.github.service;
 
 import kr.co.daeun.flowmatebe.global.github.dto.GithubCreatedIssue;
+import kr.co.daeun.flowmatebe.global.github.dto.GithubInstallationMetadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
@@ -77,6 +78,32 @@ class GithubInstallationClientTest {
         assertThat(issue.number()).isEqualTo(31);
         assertThat(issue.htmlUrl())
                 .isEqualTo("https://github.com/Team-dAIving/FlowMate-BE/issues/31");
+        server.verify();
+    }
+
+    @Test
+    void App_JWT로_installation의_Organization을_조회한다() {
+        server.expect(once(), requestTo(
+                        "https://api.github.test/app/installations/500"
+                ))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer app-jwt"))
+                .andRespond(withSuccess("""
+                        {
+                          "id": 500,
+                          "account": {
+                            "id": 900,
+                            "login": "Team-dAIving",
+                            "type": "Organization"
+                          }
+                        }
+                        """, MediaType.APPLICATION_JSON));
+
+        GithubInstallationMetadata installation = client.getInstallation(500L);
+
+        assertThat(installation.accountId()).isEqualTo(900L);
+        assertThat(installation.accountLogin()).isEqualTo("Team-dAIving");
+        assertThat(installation.accountType()).isEqualTo("Organization");
         server.verify();
     }
 }

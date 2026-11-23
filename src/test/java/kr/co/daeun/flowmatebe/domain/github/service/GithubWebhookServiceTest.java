@@ -2,6 +2,7 @@ package kr.co.daeun.flowmatebe.domain.github.service;
 
 import kr.co.daeun.flowmatebe.domain.github.entity.GithubWebhookDelivery;
 import kr.co.daeun.flowmatebe.domain.github.repository.GithubWebhookDeliveryRepository;
+import kr.co.daeun.flowmatebe.domain.github.repository.TeamGithubInstallationRepository;
 import kr.co.daeun.flowmatebe.global.github.config.GithubAppProperties;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -27,8 +28,11 @@ class GithubWebhookServiceTest {
 
     private final GithubWebhookDeliveryRepository repository =
             mock(GithubWebhookDeliveryRepository.class);
+    private final TeamGithubInstallationRepository teamInstallationRepository =
+            mock(TeamGithubInstallationRepository.class);
     private final GithubWebhookService service = new GithubWebhookService(
             repository,
+            teamInstallationRepository,
             new GithubAppProperties(
                     "flowmate-integration",
                     5_876_834L,
@@ -86,6 +90,21 @@ class GithubWebhookServiceTest {
         service.receive("delivery-1", "ping", signature(payload), payload);
 
         verify(repository, never()).save(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void installation이_삭제되면_팀_연결도_삭제한다() throws Exception {
+        byte[] payload = """
+                {
+                  "action": "deleted",
+                  "installation": {"id": 500}
+                }
+                """.getBytes(StandardCharsets.UTF_8);
+        when(repository.existsById("delivery-2")).thenReturn(false);
+
+        service.receive("delivery-2", "installation", signature(payload), payload);
+
+        verify(teamInstallationRepository).deleteAllByInstallationId(500L);
     }
 
     private String signature(byte[] payload) throws Exception {

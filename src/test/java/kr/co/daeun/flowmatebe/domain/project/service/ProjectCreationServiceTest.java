@@ -1,6 +1,8 @@
 package kr.co.daeun.flowmatebe.domain.project.service;
 
 import kr.co.daeun.flowmatebe.domain.project.dto.request.CreateProjectRequest;
+import kr.co.daeun.flowmatebe.domain.github.entity.TeamGithubInstallation;
+import kr.co.daeun.flowmatebe.domain.github.repository.TeamGithubInstallationRepository;
 import kr.co.daeun.flowmatebe.domain.project.entity.Project;
 import kr.co.daeun.flowmatebe.domain.project.repository.ProjectMemberRepository;
 import kr.co.daeun.flowmatebe.domain.project.repository.ProjectRepositoryLinkRepository;
@@ -39,6 +41,8 @@ class ProjectCreationServiceTest {
             mock(ProjectRepositoryLinkRepository.class);
     private final TeamRepository teamRepository = mock(TeamRepository.class);
     private final TeamMemberRepository teamMemberRepository = mock(TeamMemberRepository.class);
+    private final TeamGithubInstallationRepository teamInstallationRepository =
+            mock(TeamGithubInstallationRepository.class);
     private final GithubInstallationClient githubClient = mock(GithubInstallationClient.class);
     private final TaskRepository taskRepository = mock(TaskRepository.class);
     private final ProjectCreationService service = new ProjectCreationService(
@@ -47,6 +51,7 @@ class ProjectCreationServiceTest {
             repositoryLinkRepository,
             teamRepository,
             teamMemberRepository,
+            teamInstallationRepository,
             taskRepository,
             githubClient
     );
@@ -59,6 +64,8 @@ class ProjectCreationServiceTest {
         when(teamRepository.findByIdAndMemberUserId(10L, 1L)).thenReturn(Optional.of(team));
         when(teamMemberRepository.findAllWithUserByTeamId(10L))
                 .thenReturn(List.of(teamMember(team, creator), teamMember(team, leader)));
+        when(teamInstallationRepository.findByTeam_Id(10L))
+                .thenReturn(Optional.of(teamInstallation(team, 500L)));
         when(repositoryLinkRepository.existsByGithubRepositoryId(1001L)).thenReturn(false);
         when(githubClient.getRepositorySnapshot(500L, 1001L)).thenReturn(
                 new GithubRepositorySnapshot(new GithubRepositoryMetadata(
@@ -152,7 +159,7 @@ class ProjectCreationServiceTest {
                         )
                 ),
                 List.of("Docker"),
-                List.of(new CreateProjectRequest.Repository(500L, 1001L, "backend"))
+                List.of(new CreateProjectRequest.Repository(1001L, "backend"))
         );
     }
 
@@ -175,5 +182,14 @@ class ProjectCreationServiceTest {
         member.setTeam(team);
         member.setUser(user);
         return member;
+    }
+
+    private TeamGithubInstallation teamInstallation(Team team, Long installationId) {
+        TeamGithubInstallation installation = new TeamGithubInstallation();
+        installation.setTeam(team);
+        installation.setInstallationId(installationId);
+        installation.setGithubAccountId(900L);
+        installation.setAccountLogin("Team-dAIving");
+        return installation;
     }
 }
