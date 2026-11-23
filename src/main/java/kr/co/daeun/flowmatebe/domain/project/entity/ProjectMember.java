@@ -14,8 +14,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import kr.co.daeun.flowmatebe.domain.user.entity.User;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,9 +46,9 @@ public class ProjectMember {
     @Column(columnDefinition = "text")
     private String role;
 
-    @Column(name = "parts", columnDefinition = "text[]")
+    @Column(name = "parts")
     private List<String> parts;
 
-    @Column(name = "tech_stack", columnDefinition = "text[]", nullable = false)
+    @Column(name = "tech_stack", nullable = false)
     private List<String> techStack = new ArrayList<>();
 }
