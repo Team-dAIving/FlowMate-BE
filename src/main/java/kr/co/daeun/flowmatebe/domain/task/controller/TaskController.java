@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import kr.co.daeun.flowmatebe.domain.task.dto.request.CreateTaskCommentRequest;
 import kr.co.daeun.flowmatebe.domain.task.dto.response.TaskCommentResponse;
 import kr.co.daeun.flowmatebe.domain.task.dto.response.TaskDetailResponse;
+import kr.co.daeun.flowmatebe.domain.task.dto.response.MyProjectTasksResponse;
 import kr.co.daeun.flowmatebe.domain.task.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,13 @@ import java.net.URI;
 public class TaskController {
 
     private final TaskService taskService;
+
+    @GetMapping
+    public ResponseEntity<MyProjectTasksResponse> getMyProjectTasks(
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        return ResponseEntity.ok(taskService.getMyProjectTasks(userId(jwt)));
+    }
 
     @GetMapping("/{taskId}")
     public ResponseEntity<TaskDetailResponse> getTaskDetail(

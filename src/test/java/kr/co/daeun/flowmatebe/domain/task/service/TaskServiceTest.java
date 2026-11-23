@@ -3,6 +3,7 @@ package kr.co.daeun.flowmatebe.domain.task.service;
 import kr.co.daeun.flowmatebe.domain.project.entity.Project;
 import kr.co.daeun.flowmatebe.domain.project.entity.ProjectMember;
 import kr.co.daeun.flowmatebe.domain.project.repository.ProjectMemberRepository;
+import kr.co.daeun.flowmatebe.domain.project.repository.ProjectRepository;
 import kr.co.daeun.flowmatebe.domain.task.dto.request.CreateTaskCommentRequest;
 import kr.co.daeun.flowmatebe.domain.task.entity.Task;
 import kr.co.daeun.flowmatebe.domain.task.entity.TaskComment;
@@ -15,6 +16,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.OffsetDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,11 +33,61 @@ class TaskServiceTest {
     private final TaskRepository taskRepository = mock(TaskRepository.class);
     private final TaskCommentRepository taskCommentRepository = mock(TaskCommentRepository.class);
     private final ProjectMemberRepository projectMemberRepository = mock(ProjectMemberRepository.class);
+    private final ProjectRepository projectRepository = mock(ProjectRepository.class);
     private final TaskService taskService = new TaskService(
             taskRepository,
             taskCommentRepository,
-            projectMemberRepository
+            projectMemberRepository,
+            projectRepository
     );
+
+    @Test
+    void 참여_프로젝트별로_전체_업무를_묶어_조회한다() {
+        Project firstProject = project(20L, 10L, "첫 번째 프로젝트");
+        Project secondProject = project(21L, 10L, "두 번째 프로젝트");
+        ProjectMember assignee = projectMember(firstProject, user(8L));
+        Task todo = task(30L, firstProject);
+        todo.setStatus("TODO");
+        todo.setPriority("HIGH");
+        todo.setStartDate(LocalDate.of(2026, 11, 23));
+        todo.setDueDate(LocalDate.of(2026, 11, 30));
+        todo.setAssigneeMember(assignee);
+        Task inProgress = task(31L, firstProject);
+        inProgress.setStatus("IN_PROGRESS");
+
+        when(projectRepository.findAllByMemberUserIdOrderByCreatedAtDesc(7L))
+                .thenReturn(List.of(firstProject, secondProject));
+        when(taskRepository.findAllWithDetailsByProjectIds(List.of(20L, 21L)))
+                .thenReturn(List.of(todo, inProgress));
+        when(taskCommentRepository.countByTaskIds(List.of(30L, 31L)))
+                .thenReturn(List.of());
+
+        var response = taskService.getMyProjectTasks(7L);
+
+        assertThat(response.totalProjectCount()).isEqualTo(2);
+        assertThat(response.totalTaskCount()).isEqualTo(2);
+        assertThat(response.projects().get(0).projectName()).isEqualTo("첫 번째 프로젝트");
+        assertThat(response.projects().get(0).taskCount()).isEqualTo(2);
+        assertThat(response.projects().get(0).tasks()).extracting(task -> task.status())
+                .containsExactly("TODO", "IN_PROGRESS");
+        assertThat(response.projects().get(0).tasks().get(0).assignee().userId())
+                .isEqualTo(8L);
+        assertThat(response.projects().get(1).taskCount()).isZero();
+        assertThat(response.projects().get(1).tasks()).isEmpty();
+    }
+
+    @Test
+    void 참여_프로젝트가_없으면_빈_목록을_반환한다() {
+        when(projectRepository.findAllByMemberUserIdOrderByCreatedAtDesc(7L))
+                .thenReturn(List.of());
+
+        var response = taskService.getMyProjectTasks(7L);
+
+        assertThat(response.totalProjectCount()).isZero();
+        assertThat(response.totalTaskCount()).isZero();
+        assertThat(response.projects()).isEmpty();
+        verifyNoInteractions(taskRepository, taskCommentRepository);
+    }
 
     @Test
     void 로그인_사용자가_속한_팀의_업무_상세와_댓글을_조회한다() {
@@ -110,12 +162,21 @@ class TaskServiceTest {
     }
 
     private Task task(Long taskId, Long projectId, Long teamId) {
+        Project project = project(projectId, teamId, "프로젝트");
+        return task(taskId, project);
+    }
+
+    private Project project(Long projectId, Long teamId, String name) {
         Team team = new Team();
         team.setId(teamId);
         Project project = new Project();
         project.setId(projectId);
-        project.setName("프로젝트");
+        project.setName(name);
         project.setTeam(team);
+        return project;
+    }
+
+    private Task task(Long taskId, Project project) {
         Task task = new Task();
         task.setId(taskId);
         task.setProject(project);

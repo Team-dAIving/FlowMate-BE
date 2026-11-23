@@ -67,7 +67,7 @@ public record CreateProjectRequest(
 
             @NotBlank(message = "프로젝트 멤버의 파트는 필수입니다.")
             @Pattern(
-                    regexp = "^(backend|fullstack|frontend|pm|design|others|infra)$",
+                    regexp = "^(backend|fullstack|frontend|pm|design|others|infra|ai)$",
                     message = "파트는 backend, fullstack, frontend, pm, design, others, infra 중 하나여야 합니다."
             )
             String part,

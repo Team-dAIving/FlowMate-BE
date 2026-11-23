@@ -6,6 +6,7 @@ import kr.co.daeun.flowmatebe.domain.meeting.repository.MeetingTaskSuggestionRep
 import kr.co.daeun.flowmatebe.domain.project.dto.response.ProjectDetailResponse;
 import kr.co.daeun.flowmatebe.domain.project.dto.response.ProjectMeetingsResponse;
 import kr.co.daeun.flowmatebe.domain.project.dto.response.ProjectMembersResponse;
+import kr.co.daeun.flowmatebe.domain.project.dto.response.ProjectRepositoriesResponse;
 import kr.co.daeun.flowmatebe.domain.project.dto.response.ProjectTaskResponse;
 import kr.co.daeun.flowmatebe.domain.project.dto.response.ProjectTasksResponse;
 import kr.co.daeun.flowmatebe.domain.project.entity.Project;
@@ -174,6 +175,18 @@ public class ProjectDetailService {
                 })
                 .toList();
         return new ProjectMembersResponse(members);
+    }
+
+    public ProjectRepositoriesResponse getProjectRepositories(
+            Long currentUserId,
+            Long projectId
+    ) {
+        getAccessibleProject(currentUserId, projectId);
+        return new ProjectRepositoriesResponse(repositoryLinkRepository
+                .findAllByProject_IdOrderByIdAsc(projectId)
+                .stream()
+                .map(ProjectRepositoriesResponse.Repository::from)
+                .toList());
     }
 
     private Project getAccessibleProject(Long currentUserId, Long projectId) {
