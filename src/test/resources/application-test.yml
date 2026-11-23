@@ -28,6 +28,7 @@ app:
             upload-url-ttl: PT15M
     meeting:
         stt-poll-interval: PT1H
+        analysis-poll-interval: PT1H
     ai:
         base-url: http://127.0.0.1:8001
     github:

@@ -38,6 +38,7 @@ app:
             upload-url-ttl: ${S3_UPLOAD_URL_TTL:PT15M}
     meeting:
         stt-poll-interval: ${MEETING_STT_POLL_INTERVAL:PT5S}
+        analysis-poll-interval: ${MEETING_ANALYSIS_POLL_INTERVAL:PT5S}
     ai:
         base-url: ${AI_BASE_URL:http://127.0.0.1:8001}
         transcription-timeout: ${AI_TRANSCRIPTION_TIMEOUT:PT10M}
