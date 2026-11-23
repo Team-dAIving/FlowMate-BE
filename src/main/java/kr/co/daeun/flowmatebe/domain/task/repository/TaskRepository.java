@@ -92,6 +92,8 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("projectIds") Collection<Long> projectIds
     );
 
+    Optional<Task> findByIdAndProject_Id(Long taskId, Long projectId);
+
     interface TeamTaskCount {
 
         Long getTeamId();

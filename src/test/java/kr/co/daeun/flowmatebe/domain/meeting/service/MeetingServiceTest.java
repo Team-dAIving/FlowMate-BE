@@ -8,6 +8,7 @@ import kr.co.daeun.flowmatebe.domain.meeting.entity.MeetingProcessingStatus;
 import kr.co.daeun.flowmatebe.domain.meeting.repository.MeetingRepository;
 import kr.co.daeun.flowmatebe.domain.project.entity.Project;
 import kr.co.daeun.flowmatebe.domain.project.repository.ProjectRepository;
+import kr.co.daeun.flowmatebe.domain.project.repository.ProjectMemberRepository;
 import kr.co.daeun.flowmatebe.global.ai.client.AiTranscriptionClient;
 import kr.co.daeun.flowmatebe.global.ai.dto.AiTranscriptionResponse;
 import kr.co.daeun.flowmatebe.global.storage.service.MeetingRecordingStorage;
@@ -31,11 +32,14 @@ class MeetingServiceTest {
 
     private final MeetingRepository meetingRepository = mock(MeetingRepository.class);
     private final ProjectRepository projectRepository = mock(ProjectRepository.class);
+    private final ProjectMemberRepository projectMemberRepository =
+            mock(ProjectMemberRepository.class);
     private final MeetingRecordingStorage recordingStorage = mock(MeetingRecordingStorage.class);
     private final AiTranscriptionClient transcriptionClient = mock(AiTranscriptionClient.class);
     private final MeetingService service = new MeetingService(
             meetingRepository,
             projectRepository,
+            projectMemberRepository,
             recordingStorage,
             transcriptionClient
     );
