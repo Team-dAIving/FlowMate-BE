@@ -2,6 +2,7 @@ package kr.co.daeun.flowmatebe.domain.github.service;
 
 import kr.co.daeun.flowmatebe.domain.github.entity.GithubWebhookDelivery;
 import kr.co.daeun.flowmatebe.domain.github.repository.GithubWebhookDeliveryRepository;
+import kr.co.daeun.flowmatebe.domain.github.repository.TeamGithubInstallationRepository;
 import kr.co.daeun.flowmatebe.global.github.config.GithubAppProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,6 +31,7 @@ public class GithubWebhookService {
     };
 
     private final GithubWebhookDeliveryRepository deliveryRepository;
+    private final TeamGithubInstallationRepository teamInstallationRepository;
     private final GithubAppProperties githubAppProperties;
     private final ObjectMapper objectMapper;
 
@@ -56,6 +58,13 @@ public class GithubWebhookService {
         delivery.setPayload(payload);
         delivery.setProcessingStatus("PENDING");
         deliveryRepository.save(delivery);
+
+        if ("installation".equals(eventName) && "deleted".equals(delivery.getAction())) {
+            Long installationId = installationId(payload);
+            if (installationId != null) {
+                teamInstallationRepository.deleteAllByInstallationId(installationId);
+            }
+        }
     }
 
     private void validateHeaders(String deliveryId, String eventName) {
@@ -125,6 +134,15 @@ public class GithubWebhookService {
             return number.longValue();
         }
         return null;
+    }
+
+    private Long installationId(Map<String, Object> payload) {
+        Object installation = payload.get("installation");
+        if (!(installation instanceof Map<?, ?> installationMap)) {
+            return null;
+        }
+        Object id = installationMap.get("id");
+        return id instanceof Number number ? number.longValue() : null;
     }
 
     private String stringValue(Object value) {

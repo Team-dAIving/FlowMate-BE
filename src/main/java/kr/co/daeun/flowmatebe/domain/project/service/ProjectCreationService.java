@@ -6,6 +6,8 @@ import kr.co.daeun.flowmatebe.domain.project.entity.Project;
 import kr.co.daeun.flowmatebe.domain.project.entity.ProjectMember;
 import kr.co.daeun.flowmatebe.domain.project.repository.ProjectMemberRepository;
 import kr.co.daeun.flowmatebe.domain.project.repository.ProjectRepositoryLinkRepository;
+import kr.co.daeun.flowmatebe.domain.github.entity.TeamGithubInstallation;
+import kr.co.daeun.flowmatebe.domain.github.repository.TeamGithubInstallationRepository;
 import kr.co.daeun.flowmatebe.domain.team.entity.Team;
 import kr.co.daeun.flowmatebe.domain.team.entity.TeamMember;
 import kr.co.daeun.flowmatebe.domain.team.repository.TeamMemberRepository;
@@ -45,6 +47,7 @@ public class ProjectCreationService {
     private final ProjectRepositoryLinkRepository repositoryLinkRepository;
     private final TeamRepository teamRepository;
     private final TeamMemberRepository teamMemberRepository;
+    private final TeamGithubInstallationRepository teamInstallationRepository;
     private final TaskRepository taskRepository;
     private final GithubInstallationClient githubInstallationClient;
 
@@ -65,7 +68,8 @@ public class ProjectCreationService {
         Map<Long, CreateProjectRequest.Member> requestedMembers = indexMembers(request);
         validateMembers(currentUserId, request.leaderUserId(), requestedMembers, teamUsers);
 
-        List<RepositoryConnection> repositoryConnections = validateRepositories(request);
+        List<RepositoryConnection> repositoryConnections =
+                validateRepositories(request, team.getId());
 
         Project project = new Project();
         project.setName(request.name().strip());
@@ -193,7 +197,10 @@ public class ProjectCreationService {
         }
     }
 
-    private List<RepositoryConnection> validateRepositories(CreateProjectRequest request) {
+    private List<RepositoryConnection> validateRepositories(
+            CreateProjectRequest request,
+            Long teamId
+    ) {
         long commonRepositoryCount = request.repositories().stream()
                 .filter(repository -> repository.role().equalsIgnoreCase("COMMON"))
                 .count();
@@ -205,6 +212,9 @@ public class ProjectCreationService {
         }
         Set<Long> repositoryIds = new LinkedHashSet<>();
         List<RepositoryConnection> connections = new ArrayList<>();
+        Long installationId = request.repositories().isEmpty()
+                ? null
+                : requireTeamInstallation(teamId).getInstallationId();
         for (CreateProjectRequest.Repository repository : request.repositories()) {
             if (!repositoryIds.add(repository.githubRepositoryId())) {
                 throw new ResponseStatusException(
@@ -223,12 +233,20 @@ public class ProjectCreationService {
                 );
             }
             GithubRepositorySnapshot snapshot = githubInstallationClient.getRepositorySnapshot(
-                    repository.installationId(),
+                    installationId,
                     repository.githubRepositoryId()
             );
             connections.add(new RepositoryConnection(repository.role(), snapshot));
         }
         return connections;
+    }
+
+    private TeamGithubInstallation requireTeamInstallation(Long teamId) {
+        return teamInstallationRepository.findByTeam_Id(teamId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "팀에 연결된 GitHub Organization이 없습니다."
+                ));
     }
 
     private ProjectMember toProjectMember(

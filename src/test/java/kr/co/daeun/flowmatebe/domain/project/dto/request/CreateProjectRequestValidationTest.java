@@ -49,7 +49,6 @@ class CreateProjectRequestValidationTest {
                 )),
                 List.of(),
                 List.of(new CreateProjectRequest.Repository(
-                        500L,
                         1001L,
                         repositoryRole
                 ))

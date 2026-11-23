@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import kr.co.daeun.flowmatebe.global.github.dto.GithubIssueMetadata;
 import kr.co.daeun.flowmatebe.global.github.dto.GithubCreatedIssue;
 import kr.co.daeun.flowmatebe.global.github.dto.GithubInstallationRepositories;
+import kr.co.daeun.flowmatebe.global.github.dto.GithubInstallationMetadata;
 import kr.co.daeun.flowmatebe.global.github.dto.GithubRepositoryMetadata;
 import kr.co.daeun.flowmatebe.global.github.dto.GithubRepositorySnapshot;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -57,6 +58,37 @@ public class GithubInstallationClient {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
                         "GitHub App이 접근할 수 없는 저장소입니다: " + repositoryId
+                );
+            }
+            throw githubUnavailable();
+        }
+    }
+
+    public GithubInstallationMetadata getInstallation(Long installationId) {
+        try {
+            InstallationResponse installation = restClient.get()
+                    .uri("/app/installations/{installationId}", installationId)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + appJwtService.createAppJwt())
+                    .retrieve()
+                    .body(InstallationResponse.class);
+            if (installation == null || installation.id() == null
+                    || installation.account() == null
+                    || installation.account().id() == null
+                    || installation.account().login() == null) {
+                throw githubUnavailable();
+            }
+            return new GithubInstallationMetadata(
+                    installation.id(),
+                    installation.account().id(),
+                    installation.account().login(),
+                    installation.account().type()
+            );
+        } catch (RestClientResponseException exception) {
+            if (exception.getStatusCode().value() == 403
+                    || exception.getStatusCode().value() == 404) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "유효하지 않은 GitHub App installation입니다."
                 );
             }
             throw githubUnavailable();
@@ -245,6 +277,12 @@ public class GithubInstallationClient {
     }
 
     private record InstallationTokenResponse(String token) {
+    }
+
+    private record InstallationResponse(Long id, InstallationAccount account) {
+    }
+
+    private record InstallationAccount(Long id, String login, String type) {
     }
 
     private record CreateIssueRequest(
