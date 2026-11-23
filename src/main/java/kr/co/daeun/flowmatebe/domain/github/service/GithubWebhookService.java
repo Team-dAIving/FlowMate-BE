@@ -2,12 +2,9 @@ package kr.co.daeun.flowmatebe.domain.github.service;
 
 import kr.co.daeun.flowmatebe.domain.github.entity.GithubWebhookDelivery;
 import kr.co.daeun.flowmatebe.domain.github.repository.GithubWebhookDeliveryRepository;
-<<<<<<< Updated upstream
 import kr.co.daeun.flowmatebe.domain.github.repository.TeamGithubInstallationRepository;
-=======
 import kr.co.daeun.flowmatebe.domain.task.entity.Task;
 import kr.co.daeun.flowmatebe.domain.task.repository.TaskRepository;
->>>>>>> Stashed changes
 import kr.co.daeun.flowmatebe.global.github.config.GithubAppProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -47,11 +44,8 @@ public class GithubWebhookService {
     };
 
     private final GithubWebhookDeliveryRepository deliveryRepository;
-<<<<<<< Updated upstream
     private final TeamGithubInstallationRepository teamInstallationRepository;
-=======
     private final TaskRepository taskRepository;
->>>>>>> Stashed changes
     private final GithubAppProperties githubAppProperties;
     private final ObjectMapper objectMapper;
 
@@ -79,14 +73,12 @@ public class GithubWebhookService {
         delivery.setProcessingStatus(PENDING);
         deliveryRepository.save(delivery);
 
-<<<<<<< Updated upstream
         if ("installation".equals(eventName) && "deleted".equals(delivery.getAction())) {
             Long installationId = installationId(payload);
             if (installationId != null) {
                 teamInstallationRepository.deleteAllByInstallationId(installationId);
             }
         }
-=======
         if (isIssueStateChange(delivery)) {
             processIssueStateChange(delivery);
         }
@@ -173,7 +165,6 @@ public class GithubWebhookService {
         delivery.setProcessingStatus(status);
         delivery.setErrorMessage(errorMessage);
         delivery.setProcessedAt(Instant.now());
->>>>>>> Stashed changes
     }
 
     private void validateHeaders(String deliveryId, String eventName) {
