@@ -277,7 +277,7 @@ public class ProjectCreationService {
         task.setTitle(issue.title());
         task.setDescription(issue.body());
         task.setStatus("closed".equalsIgnoreCase(issue.state()) ? "DONE" : "TODO");
-        task.setPlanningStatus("PLANNED");
+        task.setPlanningStatus("CONFIRMED");
         task.setCompletedAt(issue.closedAt());
         if (issue.assigneeLogin() != null) {
             task.setAssigneeMember(membersByGithubLogin.get(

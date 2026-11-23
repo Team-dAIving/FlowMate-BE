@@ -2,6 +2,7 @@ package kr.co.daeun.flowmatebe.global.github.service;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import kr.co.daeun.flowmatebe.global.github.dto.GithubIssueMetadata;
+import kr.co.daeun.flowmatebe.global.github.dto.GithubCreatedIssue;
 import kr.co.daeun.flowmatebe.global.github.dto.GithubInstallationRepositories;
 import kr.co.daeun.flowmatebe.global.github.dto.GithubRepositoryMetadata;
 import kr.co.daeun.flowmatebe.global.github.dto.GithubRepositorySnapshot;
@@ -146,6 +147,44 @@ public class GithubInstallationClient {
         }
     }
 
+    public GithubCreatedIssue createIssue(
+            Long installationId,
+            String owner,
+            String repositoryName,
+            String title,
+            String body,
+            List<String> labels
+    ) {
+        try {
+            String token = createInstallationToken(installationId);
+            CreatedIssueResponse response = restClient.post()
+                    .uri("/repos/{owner}/{repository}/issues", owner, repositoryName)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                    .body(new CreateIssueRequest(title, body, labels))
+                    .retrieve()
+                    .body(CreatedIssueResponse.class);
+            if (response == null || response.number() == null || response.htmlUrl() == null) {
+                throw githubUnavailable();
+            }
+            return new GithubCreatedIssue(response.number(), response.htmlUrl());
+        } catch (RestClientResponseException exception) {
+            if (exception.getStatusCode().value() == 403
+                    || exception.getStatusCode().value() == 404) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "GitHub App에 이슈를 생성할 저장소 접근 권한이 없습니다."
+                );
+            }
+            if (exception.getStatusCode().value() == 422) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "GitHub가 이슈 생성 요청을 거절했습니다. 제목과 라벨을 확인해 주세요."
+                );
+            }
+            throw githubUnavailable();
+        }
+    }
+
     private String createInstallationToken(Long installationId) {
         InstallationTokenResponse response = restClient.post()
                 .uri("/app/installations/{installationId}/access_tokens", installationId)
@@ -206,6 +245,19 @@ public class GithubInstallationClient {
     }
 
     private record InstallationTokenResponse(String token) {
+    }
+
+    private record CreateIssueRequest(
+            String title,
+            String body,
+            List<String> labels
+    ) {
+    }
+
+    private record CreatedIssueResponse(
+            Integer number,
+            @JsonProperty("html_url") String htmlUrl
+    ) {
     }
 
     private record RepositoryResponse(

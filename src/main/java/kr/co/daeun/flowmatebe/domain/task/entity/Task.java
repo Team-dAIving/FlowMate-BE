@@ -71,7 +71,7 @@ public class Task {
     private Instant completedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "github_repository_id", referencedColumnName = "github_repository_id")
+    @JoinColumn(name = "github_repository_id")
     private ProjectRepository githubRepository;
 
     @Column(name = "github_issue_number")

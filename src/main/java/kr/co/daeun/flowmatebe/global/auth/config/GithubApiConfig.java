@@ -15,6 +15,7 @@ public class GithubApiConfig {
         return RestClient.builder()
                 .baseUrl("https://api.github.com")
                 .defaultHeader(HttpHeaders.ACCEPT, "application/vnd.github+json")
+                .defaultHeader("X-GitHub-Api-Version", "2022-11-28")
                 .defaultHeader(HttpHeaders.USER_AGENT, "FlowMate")
                 .build();
     }
