@@ -20,6 +20,14 @@ class CreateProjectRequestValidationTest {
     }
 
     @Test
+    void AI_파트를_허용하고_풀스택_파트는_거부한다() {
+        assertThat(validator.validate(request("ai", "ai"))).isEmpty();
+        assertThat(validator.validate(request("fullstack", "ai")))
+                .extracting(violation -> violation.getPropertyPath().toString())
+                .contains("members[0].part");
+    }
+
+    @Test
     void AI_저장소_역할을_허용한다() {
         assertThat(validator.validate(request("backend", "ai"))).isEmpty();
     }
