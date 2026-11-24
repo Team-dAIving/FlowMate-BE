@@ -44,6 +44,14 @@ class GenerateIssueDraftsRequestValidationTest {
         assertThat(validator.validate(requestWithPart("design"))).isEmpty();
     }
 
+    @Test
+    void AI_파트를_허용하고_풀스택_파트는_거부한다() {
+        assertThat(validator.validate(requestWithPart("ai"))).isEmpty();
+        assertThat(validator.validate(requestWithPart("fullstack")))
+                .extracting(violation -> violation.getPropertyPath().toString())
+                .contains("members[0].part");
+    }
+
     private GenerateIssueDraftsRequest requestWithPart(String part) {
         return new GenerateIssueDraftsRequest(
                 "FlowMate",
